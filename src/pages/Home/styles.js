@@ -79,3 +79,28 @@ export const Card = styled.section`
         font-size: 2rem;
     }
 `
+
+export const Charts = styled.section`
+    width: 100%;
+    margin-top: 40px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+`
+
+export const Chart = styled.section`
+    padding: 20px;
+    width: 90vw;
+    max-width: 400px;
+    background-color: ${({ theme }) => theme.COLORS.MAIN};
+    border-radius: 8px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`
+
+export const Journey = styled.section``
