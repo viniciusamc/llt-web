@@ -5,6 +5,10 @@ export const Container = styled.section`
     background-color: ${({ theme }) => theme.COLORS.MAIN};
     border-radius: 8px;
     margin: 40px auto 0;
+
+    @media (min-width: 768px) {
+        width: 50vw;
+    }
 `
 
 export const Top = styled.div`

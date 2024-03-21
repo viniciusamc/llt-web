@@ -1,8 +1,19 @@
-import React from 'react'
 import { Header } from '../../components/Header'
-import { Card, Chart, Charts, CreateSection, Journey, Status } from './styles'
+import {
+    Card,
+    Chart,
+    Charts,
+    CreateSection,
+    Journey,
+    Modal,
+    Overlay,
+    Status,
+    Top,
+    Form,
+} from './styles'
 
 import add from '../../assets/add.svg'
+import close from '../../assets/close.svg'
 
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules'
@@ -15,14 +26,12 @@ import {
     CartesianGrid,
     Line,
     LineChart,
-    ResponsiveContainer,
     Tooltip,
     XAxis,
     YAxis,
     Legend,
 } from 'recharts'
 import { JourneyCard } from '../../components/JourneyCard/index.jsx'
-import { FaYoutube } from 'react-icons/fa'
 
 import youtube from '../../assets/youtube.svg'
 
@@ -77,15 +86,149 @@ const data = [
 export function Home() {
     const [vocabulary, setVocabulary] = useState(9321)
 
+    const [modal, setModal] = useState(false)
+    const [modalValue, setModalValue] = useState('Youtube')
+    const [username, setUsername] = useState('Admin')
+
+    function handleModal() {
+        setModal(!modal)
+    }
+
+    function handleInput(value) {
+        setModalValue(value)
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault()
+        console.log(modalValue)
+    }
+
     return (
         <>
             <Header />
-            <CreateSection>
+            <CreateSection onClick={() => handleModal()}>
                 <h4>Hello, update your records</h4>
                 <button>
                     <img src={add} alt="Add" />
                 </button>
             </CreateSection>
+            {modal && (
+                <>
+                    <Overlay onClick={() => handleModal()} />
+                    <Modal>
+                        <Top>{username && <label>Hello {username}</label>} <img src={close} alt='close' onClick={() => {handleModal()}}/></Top>
+                        <Form>
+                            <div>
+                                <label>What did you do today?</label>
+                                <select
+                                    name="activities"
+                                    onChange={(event) =>
+                                        handleInput(event.target.value)
+                                    }
+                                    value={modalValue}
+                                >
+                                    <option value="Youtube">Youtube</option>
+                                    <option value="Podcast">
+                                        Podcast (Only in Youtube)
+                                    </option>
+                                    <option value="Movie">Movie</option>
+                                    <option value="Talk">Talk</option>
+                                    <option value="Anki">Anki</option>
+                                    <option value="Read">Read</option>
+                                    <option value="Vocabulary Test">
+                                        Vocabulary Test
+                                    </option>
+                                </select>
+                            </div>
+                            {(modalValue == 'Youtube' || modalValue == 'Podcast') && (
+                                    <>
+                                    <div>
+                                        <label>How?</label>
+                                        <select name="medias" name='youtube-how'>
+                                            <option value="Active">
+                                                Active
+                                            </option>
+                                            <option value="Passive">
+                                                Passive
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>Insert the URL of the Video (Youtube)</label>
+                                        <input placeholder='www.youtube.com/' name='youtube-url'/>
+                                    </div>
+                                    </>
+                                )}
+                            {modalValue == 'Movie' && (
+                                <div>
+                                    <label>How?</label>
+                                    <input />
+                                </div>
+                            )}
+                            {modalValue == 'Talk' && (
+                                <>
+                                <div>
+                                    <label>How?</label>
+                                        <select name="talk" name='talk-how'>
+                                            <option value="Talking">
+                                                Talking
+                                            </option>
+                                            <option value="Debating">
+                                                Debating
+                                            </option>
+                                            <option value="Language Exchange">
+                                                Language Exchange
+                                            </option>
+                                        </select>
+                                </div>
+                                    <div>
+                                        <label>How long?</label>
+                                        <input placeholder='In minutes' name='talk-long' type='number'/>
+                                    </div>
+                                </>
+                            )}
+                            {modalValue == 'Anki' && (
+                                <>
+                                    <div>
+                                        <label>How much new cards?</label>
+                                        <input name='anki-new' type='number'/>
+                                    </div>
+                                    <div>
+                                        <label>How much reviewed cards?</label>
+                                        <input name='anki-reviewed' type='number'/>
+                                    </div>
+                                    <div>
+                                        <label>How long?</label>
+                                        <input placeholder='In minutes' name='anki-long' type='number'/>
+                                    </div>
+                                </>
+                            )}
+                            {modalValue == 'Read' && (
+                                <div>
+                                    <label>How?</label>
+                                    <input />
+                                </div>
+                            )}
+                            {modalValue == 'Vocabulary Test' && (
+                                <>
+                                    <div>
+                                        <label>How much?</label>
+                                        <input name='vocabulary-new' type='number'/>
+                                    </div>
+                                    <div>
+                                        <label>When?</label>
+                                        <input name='vocabulary-when' type='date'/>
+                                    </div>
+                                </>
+                            )}
+                            <button onClick={(e) => handleSubmit(e)}>
+                                {' '}
+                                Submit{' '}
+                            </button>
+                        </Form>
+                    </Modal>
+                </>
+            )}
 
             <Status>
                 <Swiper
@@ -96,13 +239,13 @@ export function Home() {
                         delay: 2500,
                         disableOnInteraction: false,
                     }}
-                    pagination={{ clickable: true }}
                     spaceBetween={50}
+                    pagination={{ clickable: true }}
                     breakpoints={{
                         768: {
                             slidesPerView: 2,
                         },
-                        1268: {
+                        1168: {
                             slidesPerView: 3,
                         },
                     }}
