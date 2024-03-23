@@ -18,6 +18,9 @@ import { api } from '../../services/api.js';
 
 import youtube from '../../assets/youtube.svg';
 import { Input } from '../../components/Input/index.jsx';
+import { useEffect } from 'react';
+import { Button } from '../../components/Button/index.jsx';
+import { Flash } from '../../components/Flash/';
 
 const wsz = 320;
 const hsz = 320;
@@ -76,7 +79,7 @@ export function Home() {
         movieWhich: '',
         movieFile: null,
         movieLong: null,
-        talkHow: '',
+        talkHow: 'Chatting',
         talkLong: '',
         ankiNew: '',
         ankiReviewed: '',
@@ -86,13 +89,178 @@ export function Home() {
         vocabularyWhen: '',
     };
 
+    const [successMessage, setSuccessMessage] = useState('');
+    const [infoMessage, setInfoMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+
     const [vocabulary, setVocabulary] = useState(9321);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState(initialFormData);
 
     const [modal, setModal] = useState(false);
     const [modalValue, setModalValue] = useState('Youtube');
     const [username, setUsername] = useState('Admin');
+
+    const [movieSubtitle, setMovieSubtitle] = useState();
+
+    const [totalTimeYTBPD, setTotalTitmeYTBPD] = useState('00:00:00');
+
+    async function getInfoUser() {
+        const response = await api.get('/v1/users/user');
+
+        console.log(response);
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+
+        const modalValue = formData.modalValue;
+
+        if (modalValue == 'Youtube' || modalValue == 'Podcast') {
+            setIsLoading(true);
+
+            const data = {
+                url: formData.youtubeUrl,
+                type: formData.modalValue,
+                watch_type: formData.youtubeHow,
+            };
+
+            if (!data.url || !data.watch_type) {
+                setErrorMessage('All Fields are required.');
+                clearMessage();
+                setIsLoading(false);
+            }
+
+            api.post('/v1/medias', data)
+                .then((response) => {
+                    if (response.data.closed_captions > 0) {
+                        setSuccessMessage('Youtube Created with Success');
+                        setIsLoading(false);
+                        clearMessage();
+                    } else {
+                        setInfoMessage('The YouTube video does not include subtitles.');
+                        setIsLoading(false);
+                        clearMessage();
+                    }
+                })
+                .catch((e) => {
+                    setErrorMessage('Failed, Try Again');
+                    setIsLoading(false);
+                    clearMessage();
+                });
+        }
+
+        if (modalValue == 'Anki') {
+            setIsLoading(true);
+
+            const data = {
+                reviewed: formData.ankiReviewed,
+                newCards: formData.ankiNew,
+                time: formData.ankiLong,
+            };
+
+            api.post('/v1/anki', data)
+                .then((r) => {
+                    setSuccessMessage('Anki Created with success!');
+                    setIsLoading(false);
+                    clearMessage();
+                })
+                .catch((e) => {
+                    setErrorMessage('Failed, Try Again Later');
+                    setIsLoading(false);
+                    clearMessage();
+                });
+        }
+
+        if (modalValue == 'Movie') {
+            setIsLoading(false);
+
+            const data = {
+                subtitles: movieSubtitle,
+                title: formData.movieWhich,
+                watch_type: formData.movieHow,
+                type: formData.modalValue,
+            };
+
+            api.post('/v1/medias/movies', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            })
+                .then((response) => {
+                    setSuccessMessage('Movie Created with success');
+                    setIsLoading(false);
+                    clearMessage();
+                })
+                .catch((e) => {
+                    console.log(e);
+                    setErrorMessage('Failed, try again later');
+                    setIsLoading(false);
+                    clearMessage();
+                });
+        }
+
+        if (modalValue == 'Talk') {
+            setIsLoading(false);
+
+            const data = {
+                type: formData.talkHow,
+                time: formData.talkLong,
+            };
+
+            api.post('/v1/talk', data)
+                .then((response) => {
+                    setSuccessMessage('Talk Created with success!');
+                    setIsLoading(false);
+                    clearMessage();
+                })
+                .catch((e) => {
+                    console.log(e)
+                    setErrorMessage('Failed, try again later');
+                    setIsLoading(false);
+                    clearMessage();
+                });
+        }
+
+        if (modalValue == 'Read') {
+        }
+
+        if (modalValue == 'Vocabulary Test') {
+            setIsLoading(true);
+
+            const data = {
+                vocabulary: formData.vocabularyNew,
+                date: formData.vocabularyWhen,
+            };
+
+            api.post('/v1/vocabulary', data)
+                .then((r) => {
+                    setSuccessMessage('Vocabulary Created with success!');
+                    clearMessage();
+                    setIsLoading(false);
+                })
+                .catch((e) => {
+                    console.error(e);
+                    setErrorMessage('Failed, Try again later');
+                    setIsLoading(false);
+                    clearMessage();
+                });
+        }
+    }
+
+    useEffect(() => {
+        getInfoUser();
+    }, []);
+
+    function clearMessage() {
+        setTimeout(() => {
+            setSuccessMessage('');
+            setInfoMessage('');
+            setErrorMessage('');
+        }, 2500);
+    }
 
     function handleModal() {
         setModal(!modal);
@@ -114,32 +282,6 @@ export function Home() {
         });
     }
 
-    function handleSubmit(e) {
-        e.preventDefault();
-
-        if (modalValue == 'Youtube' || modalValue == 'Podcast') {
-        }
-
-        if (modalValue == 'Anki') {
-        }
-
-        if (modalValue == 'Movie') {
-        }
-
-        if (modalValue == 'Talk') {
-        }
-
-        if (modalValue == 'Read') {
-        }
-
-        if (modalValue == 'Vocabulary Test') {
-        }
-    }
-
-    // function apiPost(){
-    //     api.post('/v1/medias', {}).then((r) => (console.log(r)))
-    // }
-
     return (
         <>
             <Header />
@@ -158,6 +300,9 @@ export function Home() {
                             <img src={close} alt="close" onClick={handleModal} />
                         </Top>
                         <Form name="form">
+                            {successMessage && <Flash level={1} message={successMessage} />}
+                            {infoMessage && <Flash level={2} message={infoMessage} />}
+                            {errorMessage && <Flash level={3} message={errorMessage} />}
                             <div>
                                 <label>What did you do today?</label>
                                 <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
@@ -212,7 +357,8 @@ export function Home() {
                                         label="Send the Subtitles"
                                         type="file"
                                         name="movieFile"
-                                        onChange={handleFileChange}
+                                        onChange={(e) => setMovieSubtitle(e.target.value)}
+                                        value={movieSubtitle}
                                     />
                                     <Input
                                         label={'How long?'}
@@ -291,9 +437,7 @@ export function Home() {
                                     />
                                 </>
                             )}
-                            <button onClick={handleSubmit} type="button">
-                                Submit
-                            </button>
+                            <Button onClick={handleSubmit} type="button" disabled={isLoading} text={'Submit'} />
                         </Form>
                     </Modal>
                 </>
@@ -337,6 +481,11 @@ export function Home() {
                     <SwiperSlide>
                         <Card>
                             <h5>Total Hours</h5> <p>{vocabulary}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Hours Youtube + Podcast</h5> <p>{totalTimeYTBPD}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>

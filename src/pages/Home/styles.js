@@ -123,6 +123,7 @@ export const Form = styled.form`
         margin: 15px auto;
         border: none;
         border-radius: 8px;
+        cursor: pointer;
     }
 `;
 
