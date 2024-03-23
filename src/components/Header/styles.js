@@ -1,18 +1,24 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 export const Container = styled.header`
-    width: 100%;
+    max-width: 100vw;
     height: 70px;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
     margin-bottom: 40px;
 
-    padding: 15px;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-`
 
-export const Logo = styled.div``
+    > div {
+        width: 90%;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+`;
 
-export const User = styled.div``
+export const Logo = styled.div``;
+
+export const User = styled.div``;

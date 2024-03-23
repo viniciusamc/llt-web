@@ -1,14 +1,6 @@
-import { Bottom, Container, Top } from './styles.js'
+import { Bottom, Container, Top } from './styles.js';
 
-export function JourneyCard({
-    icon,
-    title,
-    date,
-    time,
-    describe,
-    words,
-    ...rest
-}) {
+export function JourneyCard({ icon, title, date, time, describe, words, ...rest }) {
     return (
         <Container>
             <Top>
@@ -30,5 +22,5 @@ export function JourneyCard({
                 </div>
             </Bottom>
         </Container>
-    )
+    );
 }

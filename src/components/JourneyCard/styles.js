@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 export const Container = styled.section`
     width: 90vw;
@@ -9,7 +9,7 @@ export const Container = styled.section`
     @media (min-width: 768px) {
         width: 50vw;
     }
-`
+`;
 
 export const Top = styled.div`
     display: flex;
@@ -39,7 +39,7 @@ export const Top = styled.div`
             font-weight: 400;
         }
     }
-`
+`;
 
 export const Bottom = styled.div`
     display: flex;
@@ -57,4 +57,4 @@ export const Bottom = styled.div`
         align-items: center;
         justify-content: space-between;
     }
-`
+`;

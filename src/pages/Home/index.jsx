@@ -1,42 +1,26 @@
-import { Header } from '../../components/Header'
-import {
-    Card,
-    Chart,
-    Charts,
-    CreateSection,
-    Journey,
-    Modal,
-    Overlay,
-    Status,
-    Top,
-    Form,
-} from './styles'
+import { Header } from '../../components/Header';
+import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form } from './styles';
 
-import add from '../../assets/add.svg'
-import close from '../../assets/close.svg'
+import add from '../../assets/add.svg';
+import close from '../../assets/close.svg';
 
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules'
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules';
 
-import 'swiper/css'
-import 'swiper/css/navigation'
-import 'swiper/css/pagination'
-import { useState } from 'react'
-import {
-    CartesianGrid,
-    Line,
-    LineChart,
-    Tooltip,
-    XAxis,
-    YAxis,
-    Legend,
-} from 'recharts'
-import { JourneyCard } from '../../components/JourneyCard/index.jsx'
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import { useState } from 'react';
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 
-import youtube from '../../assets/youtube.svg'
+import { api } from '../../services/api.js';
 
-const wsz = 320
-const hsz = 320
+import youtube from '../../assets/youtube.svg';
+import { Input } from '../../components/Input/index.jsx';
+
+const wsz = 320;
+const hsz = 320;
 
 const data = [
     {
@@ -81,27 +65,80 @@ const data = [
         pv: 4300,
         amt: 2100,
     },
-]
+];
 
 export function Home() {
-    const [vocabulary, setVocabulary] = useState(9321)
+    const initialFormData = {
+        modalValue: 'Youtube',
+        youtubeHow: 'Active',
+        youtubeUrl: '',
+        movieHow: 'Active',
+        movieWhich: '',
+        movieFile: null,
+        movieLong: null,
+        talkHow: '',
+        talkLong: '',
+        ankiNew: '',
+        ankiReviewed: '',
+        ankiLong: '',
+        readHow: '',
+        vocabularyNew: '',
+        vocabularyWhen: '',
+    };
 
-    const [modal, setModal] = useState(false)
-    const [modalValue, setModalValue] = useState('Youtube')
-    const [username, setUsername] = useState('Admin')
+    const [vocabulary, setVocabulary] = useState(9321);
+
+    const [formData, setFormData] = useState(initialFormData);
+
+    const [modal, setModal] = useState(false);
+    const [modalValue, setModalValue] = useState('Youtube');
+    const [username, setUsername] = useState('Admin');
 
     function handleModal() {
-        setModal(!modal)
+        setModal(!modal);
     }
 
-    function handleInput(value) {
-        setModalValue(value)
+    function handleInputChange(event) {
+        const { name, value } = event.target;
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    }
+
+    function handleFileChange(event) {
+        const { name, files } = event.target;
+        setFormData({
+            ...formData,
+            [name]: files[0],
+        });
     }
 
     function handleSubmit(e) {
-        e.preventDefault()
-        console.log(modalValue)
+        e.preventDefault();
+
+        if (modalValue == 'Youtube' || modalValue == 'Podcast') {
+        }
+
+        if (modalValue == 'Anki') {
+        }
+
+        if (modalValue == 'Movie') {
+        }
+
+        if (modalValue == 'Talk') {
+        }
+
+        if (modalValue == 'Read') {
+        }
+
+        if (modalValue == 'Vocabulary Test') {
+        }
     }
+
+    // function apiPost(){
+    //     api.post('/v1/medias', {}).then((r) => (console.log(r)))
+    // }
 
     return (
         <>
@@ -114,116 +151,148 @@ export function Home() {
             </CreateSection>
             {modal && (
                 <>
-                    <Overlay onClick={() => handleModal()} />
+                    <Overlay onClick={handleModal} />
                     <Modal>
-                        <Top>{username && <label>Hello {username}</label>} <img src={close} alt='close' onClick={() => {handleModal()}}/></Top>
-                        <Form>
+                        <Top>
+                            {username && <label>Hello {username}</label>}{' '}
+                            <img src={close} alt="close" onClick={handleModal} />
+                        </Top>
+                        <Form name="form">
                             <div>
                                 <label>What did you do today?</label>
-                                <select
-                                    name="activities"
-                                    onChange={(event) =>
-                                        handleInput(event.target.value)
-                                    }
-                                    value={modalValue}
-                                >
+                                <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
                                     <option value="Youtube">Youtube</option>
-                                    <option value="Podcast">
-                                        Podcast (Only in Youtube)
-                                    </option>
+                                    <option value="Podcast">Podcast (Only in Youtube)</option>
                                     <option value="Movie">Movie</option>
                                     <option value="Talk">Talk</option>
                                     <option value="Anki">Anki</option>
                                     <option value="Read">Read</option>
-                                    <option value="Vocabulary Test">
-                                        Vocabulary Test
-                                    </option>
+                                    <option value="Vocabulary Test">Vocabulary Test</option>
                                 </select>
                             </div>
-                            {(modalValue == 'Youtube' || modalValue == 'Podcast') && (
-                                    <>
+                            {(formData.modalValue === 'Youtube' || formData.modalValue === 'Podcast') && (
+                                <>
                                     <div>
                                         <label>How?</label>
-                                        <select name="medias" name='youtube-how'>
-                                            <option value="Active">
-                                                Active
-                                            </option>
-                                            <option value="Passive">
-                                                Passive
-                                            </option>
+                                        <select
+                                            name="youtubeHow"
+                                            onChange={handleInputChange}
+                                            value={formData.youtubeHow}
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Passive">Passive</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label>Insert the URL of the Video (Youtube)</label>
-                                        <input placeholder='www.youtube.com/' name='youtube-url'/>
-                                    </div>
-                                    </>
-                                )}
-                            {modalValue == 'Movie' && (
-                                <div>
-                                    <label>How?</label>
-                                    <input />
-                                </div>
+                                    <Input
+                                        label="Insert the URL of the Video (Youtube)"
+                                        placeholder={'www.youtube.com/example'}
+                                        name="youtubeUrl"
+                                        onChange={handleInputChange}
+                                        value={formData.youtubeUrl}
+                                    />
+                                </>
                             )}
-                            {modalValue == 'Talk' && (
+                            {formData.modalValue === 'Movie' && (
                                 <>
-                                <div>
-                                    <label>How?</label>
-                                        <select name="talk" name='talk-how'>
-                                            <option value="Talking">
-                                                Talking
-                                            </option>
-                                            <option value="Debating">
-                                                Debating
-                                            </option>
-                                            <option value="Language Exchange">
-                                                Language Exchange
-                                            </option>
+                                    <div>
+                                        <label>How?</label>
+                                        <select name="movieHow" onChange={handleInputChange} value={formData.movieHow}>
+                                            <option value="Active">Active</option>
+                                            <option value="Passive">Passive</option>
                                         </select>
-                                </div>
-                                    <div>
-                                        <label>How long?</label>
-                                        <input placeholder='In minutes' name='talk-long' type='number'/>
                                     </div>
+                                    <Input
+                                        type="text"
+                                        name="movieWhich"
+                                        label="Which Movie/TV Show?"
+                                        value={formData.movieWhich}
+                                        onChange={handleInputChange}
+                                    />
+                                    <Input
+                                        label="Send the Subtitles"
+                                        type="file"
+                                        name="movieFile"
+                                        onChange={handleFileChange}
+                                    />
+                                    <Input
+                                        label={'How long?'}
+                                        type="number"
+                                        name="movieLong"
+                                        placeholder="In minutes"
+                                        onChange={handleInputChange}
+                                    />
                                 </>
                             )}
-                            {modalValue == 'Anki' && (
+                            {formData.modalValue === 'Talk' && (
                                 <>
                                     <div>
-                                        <label>How much new cards?</label>
-                                        <input name='anki-new' type='number'/>
+                                        <label>How?</label>
+                                        <select name="talkHow" onChange={handleInputChange} value={formData.talkHow}>
+                                            <option value="Chatting">Chatting</option>
+                                            <option value="Debating">Debating</option>
+                                        </select>
                                     </div>
-                                    <div>
-                                        <label>How much reviewed cards?</label>
-                                        <input name='anki-reviewed' type='number'/>
-                                    </div>
-                                    <div>
-                                        <label>How long?</label>
-                                        <input placeholder='In minutes' name='anki-long' type='number'/>
-                                    </div>
+                                    <Input
+                                        type="number"
+                                        name="talkLong"
+                                        label="How long?"
+                                        placeholder={'In Minutes'}
+                                        value={formData.talkLong}
+                                        onChange={handleInputChange}
+                                    />
                                 </>
                             )}
-                            {modalValue == 'Read' && (
-                                <div>
-                                    <label>How?</label>
-                                    <input />
-                                </div>
-                            )}
-                            {modalValue == 'Vocabulary Test' && (
+                            {formData.modalValue === 'Anki' && (
                                 <>
-                                    <div>
-                                        <label>How much?</label>
-                                        <input name='vocabulary-new' type='number'/>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <Input
+                                            type="number"
+                                            name="ankiNew"
+                                            label="New Cards"
+                                            placeholder={'New Cards'}
+                                            value={formData.ankiNew}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            type="number"
+                                            name="ankiReviewed"
+                                            label="Reviewed Anki"
+                                            placeholder={'Reviewed Cards'}
+                                            value={formData.ankiReviewed}
+                                            onChange={handleInputChange}
+                                        />
                                     </div>
-                                    <div>
-                                        <label>When?</label>
-                                        <input name='vocabulary-when' type='date'/>
-                                    </div>
+                                    <Input
+                                        type="number"
+                                        name="ankiLong"
+                                        label="How long?"
+                                        placeholder={'In Minutes'}
+                                        value={formData.ankiLong}
+                                        onChange={handleInputChange}
+                                    />
                                 </>
                             )}
-                            <button onClick={(e) => handleSubmit(e)}>
-                                {' '}
-                                Submit{' '}
+                            {formData.modalValue === 'Vocabulary Test' && (
+                                <>
+                                    <Input
+                                        type="number"
+                                        name="vocabularyNew"
+                                        label="How Much?"
+                                        placeholder={'Total Vocabulary'}
+                                        value={formData.vocabularyNew}
+                                        onChange={handleInputChange}
+                                    />
+                                    <Input
+                                        type="date"
+                                        name="vocabularyWhen"
+                                        label="When?"
+                                        value={formData.vocabularyWhen}
+                                        onChange={handleInputChange}
+                                    />
+                                </>
+                            )}
+                            <button onClick={handleSubmit} type="button">
+                                Submit
                             </button>
                         </Form>
                     </Modal>
@@ -262,17 +331,17 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                            <h5>Total Words Past 30 Days</h5> <p>{vocabulary}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                            <h5>Total Hours</h5> <p>{vocabulary}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Words</h5> <p>{vocabulary}</p>
+                            <h5>Total Hours Last Week</h5> <p>{vocabulary}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -301,12 +370,7 @@ export function Home() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="pv"
-                            stroke="#8884d8"
-                            activeDot={{ r: 8 }}
-                        />
+                        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
                         <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
                     </LineChart>
                 </Chart>
@@ -327,12 +391,7 @@ export function Home() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="pv"
-                            stroke="#8884d8"
-                            activeDot={{ r: 8 }}
-                        />
+                        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
                         <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
                     </LineChart>
                 </Chart>
@@ -350,5 +409,5 @@ export function Home() {
                 />
             </Journey>
         </>
-    )
+    );
 }

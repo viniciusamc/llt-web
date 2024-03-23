@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 export const CreateSection = styled.section`
     width: 100%;
@@ -45,7 +45,7 @@ export const CreateSection = styled.section`
             }
         }
     }
-`
+`;
 
 export const Overlay = styled.div`
     position: fixed;
@@ -57,7 +57,7 @@ export const Overlay = styled.div`
     z-index: 9999;
     backdrop-filter: blur(5px);
     cursor: pointer;
-`
+`;
 
 export const Modal = styled.section`
     position: absolute;
@@ -75,7 +75,7 @@ export const Modal = styled.section`
     display: flex;
     flex-direction: column;
     gap: 12px;
-`
+`;
 
 export const Top = styled.div`
     display: flex;
@@ -91,7 +91,7 @@ export const Top = styled.div`
         width: 40px;
         cursor: pointer;
     }
-`
+`;
 
 export const Form = styled.form`
     display: flex;
@@ -117,14 +117,14 @@ export const Form = styled.form`
     }
 
     button {
-        background-color: ${({theme}) => theme.COLORS.PRIMARY};
+        background-color: ${({ theme }) => theme.COLORS.PRIMARY};
         width: 50%;
         padding: 12px;
         margin: 15px auto;
         border: none;
         border-radius: 8px;
     }
-`
+`;
 
 export const Status = styled.section`
     width: 90vw;
@@ -133,7 +133,7 @@ export const Status = styled.section`
     margin-top: 40px;
     height: 200px;
     background-color: ${({ theme }) => theme.COLORS.BACKGROUND};
-`
+`;
 
 export const Card = styled.section`
     width: 100%;
@@ -157,7 +157,7 @@ export const Card = styled.section`
     > p {
         font-size: 2rem;
     }
-`
+`;
 
 export const Charts = styled.section`
     width: 90vw;
@@ -173,7 +173,7 @@ export const Charts = styled.section`
         flex-direction: row;
         justify-content: space-around;
     }
-`
+`;
 
 export const Chart = styled.section`
     padding: 20px;
@@ -185,6 +185,6 @@ export const Chart = styled.section`
     display: flex;
     justify-content: center;
     align-items: center;
-`
+`;
 
-export const Journey = styled.section``
+export const Journey = styled.section``;

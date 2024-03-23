@@ -6,4 +6,4 @@ export default {
         SECONDARY: '#252525',
         WHITE: '#FFF',
     },
-}
+};
