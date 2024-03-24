@@ -21,6 +21,7 @@ import { Input } from '../../components/Input/index.jsx';
 import { useEffect } from 'react';
 import { Button } from '../../components/Button/index.jsx';
 import { Flash } from '../../components/Flash/';
+import dayjs from 'dayjs';
 
 const wsz = 320;
 const hsz = 320;
@@ -93,24 +94,34 @@ export function Home() {
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [vocabulary, setVocabulary] = useState(9321);
+    const [vocabularyAverage, setVocabularyAverage] = useState(0);
+    const [vocabulary, setVocabulary] = useState(0);
+
+    const [mediasWords, setMediasWords] = useState(0)
 
     const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState(initialFormData);
 
     const [modal, setModal] = useState(false);
-    const [modalValue, setModalValue] = useState('Youtube');
     const [username, setUsername] = useState('Admin');
 
-    const [movieSubtitle, setMovieSubtitle] = useState();
 
     const [totalTimeYTBPD, setTotalTitmeYTBPD] = useState('00:00:00');
 
+    const [listJourney, setListJourney] = useState([]);
+
     async function getInfoUser() {
         const response = await api.get('/v1/users/user');
+        const vocabulary = await api.get('/v1/vocabulary')
+        console.log(response.data)
 
-        console.log(response);
+        setVocabularyAverage(vocabulary.data.average)
+        setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary)
+
+        setMediasWords(response.data.totalWordsMedia)
+        setTotalTitmeYTBPD(response.data.mediasTotalTime)
+        setListJourney(response.data.ordered);
     }
 
     function handleSubmit(e) {
@@ -135,14 +146,15 @@ export function Home() {
 
             api.post('/v1/medias', data)
                 .then((response) => {
-                    if (response.data.closed_captions > 0) {
+                    if (response.data.closed_caption) {
                         setSuccessMessage('Youtube Created with Success');
                         setIsLoading(false);
                         clearMessage();
                     } else {
-                        setInfoMessage('The YouTube video does not include subtitles.');
+                        setSuccessMessage('Youtube Created with Success');
+                        setInfoMessage('The YouTube does not include subtitles.');
                         setIsLoading(false);
-                        clearMessage();
+                        clearMessage(4000);
                     }
                 })
                 .catch((e) => {
@@ -178,11 +190,17 @@ export function Home() {
             setIsLoading(false);
 
             const data = {
-                subtitles: movieSubtitle,
+                subtitles: formData.movieFile,
                 title: formData.movieWhich,
                 watch_type: formData.movieHow,
                 type: formData.modalValue,
             };
+
+            if (data.subtitles.type != 'application/x-subrip') {
+                setErrorMessage('Only .srt subtitles is allowed');
+                clearMessage();
+                return;
+            }
 
             api.post('/v1/medias/movies', data, {
                 headers: {
@@ -195,7 +213,6 @@ export function Home() {
                     clearMessage();
                 })
                 .catch((e) => {
-                    console.log(e);
                     setErrorMessage('Failed, try again later');
                     setIsLoading(false);
                     clearMessage();
@@ -217,7 +234,6 @@ export function Home() {
                     clearMessage();
                 })
                 .catch((e) => {
-                    console.log(e)
                     setErrorMessage('Failed, try again later');
                     setIsLoading(false);
                     clearMessage();
@@ -242,24 +258,28 @@ export function Home() {
                     setIsLoading(false);
                 })
                 .catch((e) => {
-                    console.error(e);
                     setErrorMessage('Failed, Try again later');
                     setIsLoading(false);
                     clearMessage();
                 });
         }
+
+        getInfoUser()
     }
 
     useEffect(() => {
         getInfoUser();
     }, []);
 
-    function clearMessage() {
-        setTimeout(() => {
-            setSuccessMessage('');
-            setInfoMessage('');
-            setErrorMessage('');
-        }, 2500);
+    function clearMessage(time) {
+        setTimeout(
+            () => {
+                setSuccessMessage('');
+                setInfoMessage('');
+                setErrorMessage('');
+            },
+            time ? time : 2500,
+        );
     }
 
     function handleModal() {
@@ -357,8 +377,7 @@ export function Home() {
                                         label="Send the Subtitles"
                                         type="file"
                                         name="movieFile"
-                                        onChange={(e) => setMovieSubtitle(e.target.value)}
-                                        value={movieSubtitle}
+                                        onChange={handleFileChange}
                                     />
                                     <Input
                                         label={'How long?'}
@@ -470,7 +489,12 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Words</h5> <p>{vocabulary}</p>
+                            <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Words Medias</h5> <p>{mediasWords}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -547,6 +571,28 @@ export function Home() {
             </Charts>
 
             <Journey>
+                {listJourney.length > 0 &&
+                    listJourney.map((item, index) => {
+                        const clearDate = dayjs(item.created_at).format('DD/MM/YYYY');
+
+                        return (
+                            <JourneyCard
+                                key={index}
+                                icon={item.source}
+                                title={item.source}
+                                describe={item.title}
+                                time={item.time}
+                                words={item.total_words}
+                                date={clearDate}
+                                withoutTitle={item.type}
+                                tl={item.target_language}
+                                reviewed={item.reviewed ? "Reviewed " + item.reviewed : null}
+                                added={item.added_cards ? "Added Cards " + item.added_cards : null}
+                                total={item.vocabulary ? "Vocabulary " + item.vocabulary : null}
+                                diff={item.diff_last ? "Difference " + item.diff_last : null}
+                            />
+                        );
+                    })}
                 <JourneyCard
                     icon={youtube}
                     title={'Youtube'}

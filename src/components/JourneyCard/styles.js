@@ -17,11 +17,18 @@ export const Top = styled.div`
     justify-content: space-between;
     padding: 15px;
     border-bottom: 1px solid #fff6;
+    text-transform: capitalize;
 
     > div {
         display: flex;
         align-items: center;
         gap: 12px;
+
+        img {
+            width: 40px;
+            height: 40px;
+            object-fit: fill;
+        }
     }
 
     h5 {
@@ -44,6 +51,7 @@ export const Top = styled.div`
 export const Bottom = styled.div`
     display: flex;
     flex-direction: column;
+    
 
     padding: 15px;
 
@@ -56,5 +64,6 @@ export const Bottom = styled.div`
         display: flex;
         align-items: center;
         justify-content: space-between;
+        text-align: right;
     }
 `;
