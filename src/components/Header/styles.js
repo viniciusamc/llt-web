@@ -19,6 +19,10 @@ export const Container = styled.header`
     }
 `;
 
-export const Logo = styled.div``;
+export const Logo = styled.div`
+    > h4 {
+        font-size: 0.8rem;
+    }
+`;
 
 export const User = styled.div``;

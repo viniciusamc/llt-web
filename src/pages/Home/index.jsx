@@ -94,6 +94,10 @@ export function Home() {
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+    const [totalTime, setTotalTime] = useState('00:00:00')
+    const [streak, setStreak] = useState(0)
+    const [longestStreak, setLongestStreak] = useState(0)
+
     const [vocabularyAverage, setVocabularyAverage] = useState(0);
     const [vocabulary, setVocabulary] = useState(0);
 
@@ -104,13 +108,17 @@ export function Home() {
     const [booksTotalTime, setBooksTotalTime] = useState('00:00:00')
     const [books, setBooks] = useState(0)
 
+    const [talkTotalTime, setTalkTotalTime] = useState('00:00:00');
+    const [talkStreak, setTalkStreak] = useState(0);
+    const [talkAverage, setTalkAverage] = useState('00:00:00')
+    const [talk, setTalk] = useState()
+
     const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState(initialFormData);
 
     const [modal, setModal] = useState(false);
     const [username, setUsername] = useState('Admin');
-
 
     const [totalTimeYTBPD, setTotalTitmeYTBPD] = useState('00:00:00');
 
@@ -120,8 +128,11 @@ export function Home() {
         const response = await api.get('/v1/users/user');
         const vocabulary = await api.get('/v1/vocabulary')
         const books = await api.get('/v1/books')
-        const output = await api.get('/v1/talk')
-        console.log(output)
+        const talk = await api.get('/v1/talk')
+
+        setTotalTime(response.data.totalTime)
+        setStreak(response.data.streak.currentStreak)
+        setLongestStreak(response.data.streak.longestStreak)
 
         setVocabularyAverage(vocabulary.data.average)
         setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary)
@@ -133,6 +144,11 @@ export function Home() {
         setBooksTotalPages(books.data.totalBooksPages)
         setBooksTotalTime(books.data.totalTimeBooks)
         setBooks(books.data.books.length)
+
+        setTalk(talk.data.output.length);
+        setTalkTotalTime(talk.data.outputTotalTime)
+        setTalkAverage(talk.data.averageTime)
+        setTalkStreak(talk.data.outputStreak.currentStreak)
 
         setListJourney(response.data.ordered);
     }
@@ -502,6 +518,16 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
+                            <h5>Your Streak</h5> <p>{streak}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Time</h5> <p>{totalTime}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
                             <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
                         </Card>
                     </SwiperSlide>
@@ -533,6 +559,31 @@ export function Home() {
                     <SwiperSlide>
                         <Card>
                             <h5>Books</h5> <p>{books}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Talks</h5> <p>{talk}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Streak Talk</h5> <p>{talkStreak}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Time Talk</h5> <p>{talkTotalTime}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Average Talk</h5> <p>{talkAverage}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Your Longest Streak</h5> <p>{longestStreak}</p>
                         </Card>
                     </SwiperSlide>
                 </Swiper>

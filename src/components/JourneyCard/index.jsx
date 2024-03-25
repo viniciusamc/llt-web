@@ -5,6 +5,7 @@ import discord from '../../assets/discord.svg';
 import anki from '../../assets/anki.svg';
 import podcast from '../../assets/podcast.svg';
 import movie from '../../assets/movie.svg';
+import book from '../../assets/book.svg';
 import iso6391 from 'iso-639-1';
 
 export function JourneyCard({ icon, title, date, time, describe, words, tl, ...rest }) {
@@ -24,6 +25,8 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, ...r
         cardIcon = movie
     } else if (icon == 'Podcast'){
         cardIcon = podcast
+    } else if (icon == 'books' || icon == 'books_history'){
+        cardIcon = book
     }
 
     return (
