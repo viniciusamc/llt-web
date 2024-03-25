@@ -99,6 +99,11 @@ export function Home() {
 
     const [mediasWords, setMediasWords] = useState(0)
 
+    const [booksWords, setBooksWords] = useState(0)
+    const [booksTotalPages, setBooksTotalPages] = useState(0)
+    const [booksTotalTime, setBooksTotalTime] = useState('00:00:00')
+    const [books, setBooks] = useState(0)
+
     const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState(initialFormData);
@@ -114,13 +119,21 @@ export function Home() {
     async function getInfoUser() {
         const response = await api.get('/v1/users/user');
         const vocabulary = await api.get('/v1/vocabulary')
-        console.log(response.data)
+        const books = await api.get('/v1/books')
+        const output = await api.get('/v1/talk')
+        console.log(output)
 
         setVocabularyAverage(vocabulary.data.average)
         setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary)
 
         setMediasWords(response.data.totalWordsMedia)
         setTotalTitmeYTBPD(response.data.mediasTotalTime)
+
+        setBooksWords(books.data.totalBooksWords)
+        setBooksTotalPages(books.data.totalBooksPages)
+        setBooksTotalTime(books.data.totalTimeBooks)
+        setBooks(books.data.books.length)
+
         setListJourney(response.data.ordered);
     }
 
@@ -499,12 +512,12 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Words Past 30 Days</h5> <p>{vocabulary}</p>
+                            <h5>Total Words Books</h5> <p>{booksWords}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Hours</h5> <p>{vocabulary}</p>
+                            <h5>Total Hours Book</h5> <p>{booksTotalTime}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -514,12 +527,12 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Hours Last Week</h5> <p>{vocabulary}</p>
+                            <h5>Total Pages Books</h5> <p>{booksTotalPages}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                            <h5>Books</h5> <p>{books}</p>
                         </Card>
                     </SwiperSlide>
                 </Swiper>

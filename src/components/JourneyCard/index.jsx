@@ -3,6 +3,8 @@ import youtube from '../../assets/youtube.svg';
 import vocabulary from '../../assets/vocabulary.svg';
 import discord from '../../assets/discord.svg';
 import anki from '../../assets/anki.svg';
+import podcast from '../../assets/podcast.svg';
+import movie from '../../assets/movie.svg';
 import iso6391 from 'iso-639-1';
 
 export function JourneyCard({ icon, title, date, time, describe, words, tl, ...rest }) {
@@ -12,12 +14,16 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, ...r
 
     if (icon === 'vocabulary') {
         cardIcon = vocabulary;
-    } else if (icon === 'talk') {
+    } else if (icon == 'talk') {
         cardIcon = discord;
-    } else if (icon === 'youtube') {
+    } else if (icon == 'Youtube') {
         cardIcon = youtube;
-    } else if (icon === 'anki') {
+    } else if (icon == 'anki') {
         cardIcon = anki;
+    } else if (icon == 'Movie'){
+        cardIcon = movie
+    } else if (icon == 'Podcast'){
+        cardIcon = podcast
     }
 
     return (
