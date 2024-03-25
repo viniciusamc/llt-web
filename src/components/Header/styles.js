@@ -25,4 +25,27 @@ export const Logo = styled.div`
     }
 `;
 
-export const User = styled.div``;
+export const User = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    text-align: right;
+
+    > h6 {
+        font-size: 1.2rem;
+        font-weight: 400;
+    }
+
+    > h7 {
+        font-size: 1rem;
+        font-weight: 300;
+        cursor: pointer;
+    }
+
+    > h7:hover {
+        color: red;
+        transition: all .3s ease-out;
+    }
+`;
+
+export const Logout = styled.div``;

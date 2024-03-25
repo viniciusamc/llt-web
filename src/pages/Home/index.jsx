@@ -298,6 +298,10 @@ export function Home() {
 
     useEffect(() => {
         getInfoUser();
+
+        const userName = localStorage.getItem('@username')
+
+        setUsername(userName)
     }, []);
 
     function clearMessage(time) {

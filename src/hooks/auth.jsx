@@ -15,13 +15,15 @@ export const AuthProvider = ({ children }) => {
 
                 setUser(response.data.user);
 
+                localStorage.setItem('@username', response.data.user)
+
                 Cookies.set('token', response.data.token, {
                     expires: 30,
                     secure: true,
                     sameSite: true,
                 });
 
-                return { success: true };
+                return { success: false };
             })
             .catch((e) => {
                 if (e.response.status === 401) {
