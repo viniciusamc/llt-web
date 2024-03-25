@@ -17,8 +17,9 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, ...r
         cardIcon = vocabulary;
     } else if (icon == 'talk') {
         cardIcon = discord;
-    } else if (icon == 'Youtube') {
+    } else if (icon == 'Youtube' || icon == 'Video') {
         cardIcon = youtube;
+        title = 'Youtube';
     } else if (icon == 'anki') {
         cardIcon = anki;
     } else if (icon == 'Movie'){
