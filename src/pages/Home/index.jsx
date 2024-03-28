@@ -124,19 +124,25 @@ export function Home() {
         setListJourney(response.data.ordered);
         setListJourneyWithoutFilter(response.data.ordered);
 
-        setChartMonthHour(
-            response.data.hoursByMonth.sort((a, b) => {
-                const [monthA, yearA] = a.monthYear.split('/');
-                const [monthB, yearB] = b.monthYear.split('/');
+        setChartMonthHour(response.data.hoursByMonth.reverse());
+        const cumulativeHours = [];
+        let cumulativeSum = 0;
 
-                const dateA = new Date(yearA, monthA - 1);
-                const dateB = new Date(yearB, monthB - 1);
+        for (let i = 0; i < response.data.hoursByMonth.length; i++) {
+            const currentMonthYear = response.data.hoursByMonth[i].monthYear;
+            const currentTotalTime = response.data.hoursByMonth[i].totalTime;
 
-                return dateA - dateB;
-            }),
-        );
+            cumulativeSum += currentTotalTime;
 
-        setChartMonthCumulative(response.data.cumulativeHoursByMonth);
+            const cumulativeObject = {
+                monthYear: currentMonthYear,
+                totalTime: cumulativeSum,
+            };
+
+            cumulativeHours.push(cumulativeObject);
+        }
+
+        setChartMonthCumulative(cumulativeHours);
     }
     function handleSubmit(e) {
         e.preventDefault();
@@ -628,12 +634,18 @@ export function Home() {
                             bottom: 5,
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
+                        <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
                         <XAxis dataKey="monthYear" />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="linear" dataKey="totalTime" stroke="#fff" activeDot={{ r: 8 }} />
+                        <Line
+                            type="monotone"
+                            dataKey="totalTime"
+                            name="Hours By Month"
+                            stroke="#8884d8"
+                            activeDot={{ r: 8 }}
+                        />
                     </LineChart>
                 </Chart>
                 <Chart>
@@ -653,8 +665,7 @@ export function Home() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="cumulativeHours" stroke="#8884d8" activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="cumulativeHours" stroke="#8884d8" activeDot={{ r: 8 }} />
+                        <Line type="monotone" dataKey="totalTime" name='Total Hours'  stroke="#8884d8" activeDot={{ r: 8 }} />
                     </LineChart>
                 </Chart>
             </Charts>
