@@ -34,51 +34,6 @@ import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
 const wsz = 420;
 const hsz = 320;
 
-const data = [
-    {
-        name: 'Page A',
-        uv: 4000,
-        pv: 2400,
-        amt: 2400,
-    },
-    {
-        name: 'Page B',
-        uv: 3000,
-        pv: 1398,
-        amt: 2210,
-    },
-    {
-        name: 'Page C',
-        uv: 2000,
-        pv: 9800,
-        amt: 2290,
-    },
-    {
-        name: 'Page D',
-        uv: 2780,
-        pv: 3908,
-        amt: 2000,
-    },
-    {
-        name: 'Page E',
-        uv: 1890,
-        pv: 4800,
-        amt: 2181,
-    },
-    {
-        name: 'Page F',
-        uv: 2390,
-        pv: 3800,
-        amt: 2500,
-    },
-    {
-        name: 'Page G',
-        uv: 3490,
-        pv: 4300,
-        amt: 2100,
-    },
-];
-
 export function Home() {
     const initialFormData = {
         modalValue: 'Youtube',
@@ -105,6 +60,7 @@ export function Home() {
     const [errorMessage, setErrorMessage] = useState('');
 
     const [chartMonthHour, setChartMonthHour] = useState([]);
+    const [chartMonthCumulative, setChartMonthCumulative] = useState([]);
 
     const [totalTime, setTotalTime] = useState('00:00:00');
     const [streak, setStreak] = useState(0);
@@ -145,6 +101,8 @@ export function Home() {
         const books = await api.get('/v1/books');
         const talk = await api.get('/v1/talk');
 
+        console.log(response.data);
+
         setTotalTime(response.data.totalTime);
         setStreak(response.data.streak.currentStreak);
         setLongestStreak(response.data.streak.longestStreak);
@@ -179,6 +137,8 @@ export function Home() {
                 return dateA - dateB;
             }),
         );
+
+        setChartMonthCumulative(response.data.cumulativeHoursByMonth);
     }
     function handleSubmit(e) {
         e.preventDefault();
@@ -675,14 +635,14 @@ export function Home() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="totalTime" stroke="#82ca9d" />
+                        <Line type="linear" dataKey="totalTime" stroke="#fff" activeDot={{ r: 8 }} />
                     </LineChart>
                 </Chart>
                 <Chart>
                     <LineChart
                         width={wsz}
                         height={hsz}
-                        data={data}
+                        data={chartMonthCumulative}
                         margin={{
                             top: 5,
                             right: 30,
@@ -691,12 +651,12 @@ export function Home() {
                         }}
                     >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="monthYear" />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+                        <Line type="monotone" dataKey="cumulativeHours" stroke="#8884d8" activeDot={{ r: 8 }} />
+                        <Line type="monotone" dataKey="cumulativeHours" stroke="#8884d8" activeDot={{ r: 8 }} />
                     </LineChart>
                 </Chart>
             </Charts>
