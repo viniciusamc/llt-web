@@ -104,6 +104,8 @@ export function Home() {
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+    const [chartMonthHour, setChartMonthHour] = useState([]);
+
     const [totalTime, setTotalTime] = useState('00:00:00');
     const [streak, setStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
@@ -165,8 +167,19 @@ export function Home() {
 
         setListJourney(response.data.ordered);
         setListJourneyWithoutFilter(response.data.ordered);
-    }
 
+        setChartMonthHour(
+            response.data.hoursByMonth.sort((a, b) => {
+                const [monthA, yearA] = a.monthYear.split('/');
+                const [monthB, yearB] = b.monthYear.split('/');
+
+                const dateA = new Date(yearA, monthA - 1);
+                const dateB = new Date(yearB, monthB - 1);
+
+                return dateA - dateB;
+            }),
+        );
+    }
     function handleSubmit(e) {
         e.preventDefault();
 
@@ -330,7 +343,7 @@ export function Home() {
         } else if (filter === 'All') {
             const filtered = journeyList.filter((item) => {
                 const formattedDate = dayjs(item.created_at, 'DD/MM/YYYY').format('DD/MM/YYYY');
-                return formattedDate >= initialDate && formattedDate <= finalDate
+                return formattedDate >= initialDate && formattedDate <= finalDate;
             });
             setListJourney(filtered);
             return;
@@ -649,7 +662,7 @@ export function Home() {
                     <LineChart
                         width={wsz}
                         height={hsz}
-                        data={data}
+                        data={chartMonthHour}
                         margin={{
                             top: 5,
                             right: 30,
@@ -658,12 +671,11 @@ export function Home() {
                         }}
                     >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="monthYear" />
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+                        <Line type="monotone" dataKey="totalTime" stroke="#82ca9d" />
                     </LineChart>
                 </Chart>
                 <Chart>
