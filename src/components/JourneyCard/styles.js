@@ -3,6 +3,7 @@ import styled from 'styled-components';
 export const Container = styled.section`
     width: 90vw;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
+    color: ${({theme}) => theme.COLORS.WHITE};
     border-radius: 8px;
     margin: 40px auto 0;
 

@@ -9,6 +9,7 @@ export const Content = styled.button`
     border: none;
     border-radius: 8px;
     transition: ${({ disabled }) => (disabled ? 'none' : 'transform 0.3s ease')};
+    color: ${({theme}) => theme.COLORS.WHITE};
 
     &:hover {
         ${({ disabled }) => !disabled && 'transform: scale(1.05);'}

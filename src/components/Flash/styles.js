@@ -23,4 +23,5 @@ export const Content = styled.div`
     display: flex;
     gap: 8px;
     align-items: center;
+    color: ${({theme}) => theme.COLORS.WHITE};
 `;

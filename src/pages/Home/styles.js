@@ -82,6 +82,7 @@ export const Top = styled.div`
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #fff;
+    color: ${({theme}) => theme.COLORS.WHITE};
 
     > label {
         font-size: 1.5rem;
@@ -141,6 +142,7 @@ export const Card = styled.section`
     min-width: 290px;
     margin: 0 auto;
     height: 200px;
+    color: ${({ theme }) => theme.COLORS.WHITE};
 
     display: flex;
     flex-direction: column;
@@ -172,7 +174,7 @@ export const Charts = styled.section`
 
     @media (min-width: 1024px) {
         flex-direction: row;
-        justify-content: space-around;
+        justify-content: space-between;
     }
 `;
 
@@ -188,4 +190,84 @@ export const Chart = styled.section`
     align-items: center;
 `;
 
-export const Journey = styled.section``;
+export const Journey = styled.section`
+    color: ${({ theme }) => theme.COLORS.WHITE};
+    > ul {
+        display: flex;
+        justify-content: center;
+        margin: 20px;
+        gap: 12px;
+        list-style: none;
+
+        li {
+            a {
+                border-radius: 8px;
+                padding: 12px;
+                background-color: ${({ theme }) => theme.COLORS.MAIN};
+                cursor: pointer;
+            }
+        }
+
+        .selected {
+            a {
+                padding: 12px;
+                background-color: ${({ theme }) => theme.COLORS.PRIMARY};
+                border-radius: 8px;
+                cursor: pointer;
+            }
+        }
+    }
+`;
+
+export const Filter = styled.div`
+    display: flex;
+    width: fit-content;
+    margin: 40px auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    > div {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    select {
+        background-color: ${({ theme }) => theme.COLORS.MAIN};
+        color: ${({ theme }) => theme.COLORS.WHITE};
+        font-size: 1.1rem;
+        padding: 8px;
+        border: 1px solid #fff3;
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    > div > section {
+        span {
+            color: #fff;
+        }
+
+        button {
+            background-color: ${({ theme }) => theme.COLORS.MAIN};
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            color: #fff;
+
+            abbr {
+                color: #fff;
+            }
+        }
+
+        .react-calendar__tile--active {
+            background: ${({ theme }) => theme.COLORS.PRIMARY};
+            color: #fff;
+        }
+
+        .react-calendar__tile--hover {
+            background: ${({ theme }) => theme.COLORS.PRIMARY};
+            color: #fff;
+        }
+    }
+`;

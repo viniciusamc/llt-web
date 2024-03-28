@@ -1,29 +1,37 @@
-import { Header } from '../../components/Header';
-import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form } from './styles';
+import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form, Filter } from './styles';
 
-import add from '../../assets/add.svg';
-import close from '../../assets/close.svg';
+import { Header } from '../../components/Header';
+import { Input } from '../../components/Input/index.jsx';
+import { Button } from '../../components/Button/index.jsx';
+import { Flash } from '../../components/Flash/';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules';
 
+import ReactPaginate from 'react-paginate';
+
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
+
 import { useState } from 'react';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
 import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 
 import { api } from '../../services/api.js';
-
-import youtube from '../../assets/youtube.svg';
-import { Input } from '../../components/Input/index.jsx';
 import { useEffect } from 'react';
-import { Button } from '../../components/Button/index.jsx';
-import { Flash } from '../../components/Flash/';
-import dayjs from 'dayjs';
 
-const wsz = 320;
+import add from '../../assets/add.svg';
+import close from '../../assets/close.svg';
+
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
+
+const wsz = 420;
 const hsz = 320;
 
 const data = [
@@ -90,28 +98,32 @@ export function Home() {
         vocabularyWhen: '',
     };
 
+    const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
+
     const [successMessage, setSuccessMessage] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [totalTime, setTotalTime] = useState('00:00:00')
-    const [streak, setStreak] = useState(0)
-    const [longestStreak, setLongestStreak] = useState(0)
+    const [totalTime, setTotalTime] = useState('00:00:00');
+    const [streak, setStreak] = useState(0);
+    const [longestStreak, setLongestStreak] = useState(0);
 
     const [vocabularyAverage, setVocabularyAverage] = useState(0);
     const [vocabulary, setVocabulary] = useState(0);
 
-    const [mediasWords, setMediasWords] = useState(0)
+    const [mediasWords, setMediasWords] = useState(0);
 
-    const [booksWords, setBooksWords] = useState(0)
-    const [booksTotalPages, setBooksTotalPages] = useState(0)
-    const [booksTotalTime, setBooksTotalTime] = useState('00:00:00')
-    const [books, setBooks] = useState(0)
+    const [booksWords, setBooksWords] = useState(0);
+    const [booksTotalPages, setBooksTotalPages] = useState(0);
+    const [booksTotalTime, setBooksTotalTime] = useState('00:00:00');
+    const [books, setBooks] = useState(0);
 
     const [talkTotalTime, setTalkTotalTime] = useState('00:00:00');
     const [talkStreak, setTalkStreak] = useState(0);
-    const [talkAverage, setTalkAverage] = useState('00:00:00')
-    const [talk, setTalk] = useState()
+    const [talkAverage, setTalkAverage] = useState('00:00:00');
+    const [talk, setTalk] = useState();
+
+    const [filter, setFilter] = useState('All');
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -123,34 +135,36 @@ export function Home() {
     const [totalTimeYTBPD, setTotalTitmeYTBPD] = useState('00:00:00');
 
     const [listJourney, setListJourney] = useState([]);
+    const [listJourneyWithoutFilter, setListJourneyWithoutFilter] = useState([]);
 
     async function getInfoUser() {
         const response = await api.get('/v1/users/user');
-        const vocabulary = await api.get('/v1/vocabulary')
-        const books = await api.get('/v1/books')
-        const talk = await api.get('/v1/talk')
+        const vocabulary = await api.get('/v1/vocabulary');
+        const books = await api.get('/v1/books');
+        const talk = await api.get('/v1/talk');
 
-        setTotalTime(response.data.totalTime)
-        setStreak(response.data.streak.currentStreak)
-        setLongestStreak(response.data.streak.longestStreak)
+        setTotalTime(response.data.totalTime);
+        setStreak(response.data.streak.currentStreak);
+        setLongestStreak(response.data.streak.longestStreak);
 
-        setVocabularyAverage(vocabulary.data.average)
-        setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary)
+        setVocabularyAverage(vocabulary.data.average);
+        setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary);
 
-        setMediasWords(response.data.totalWordsMedia)
-        setTotalTitmeYTBPD(response.data.mediasTotalTime)
+        setMediasWords(response.data.totalWordsMedia);
+        setTotalTitmeYTBPD(response.data.mediasTotalTime);
 
-        setBooksWords(books.data.totalBooksWords)
-        setBooksTotalPages(books.data.totalBooksPages)
-        setBooksTotalTime(books.data.totalTimeBooks)
-        setBooks(books.data.books.length)
+        setBooksWords(books.data.totalBooksWords);
+        setBooksTotalPages(books.data.totalBooksPages);
+        setBooksTotalTime(books.data.totalTimeBooks);
+        setBooks(books.data.books.length);
 
         setTalk(talk.data.output.length);
-        setTalkTotalTime(talk.data.outputTotalTime)
-        setTalkAverage(talk.data.averageTime)
-        setTalkStreak(talk.data.outputStreak.currentStreak)
+        setTalkTotalTime(talk.data.outputTotalTime);
+        setTalkAverage(talk.data.averageTime);
+        setTalkStreak(talk.data.outputStreak.currentStreak);
 
         setListJourney(response.data.ordered);
+        setListJourneyWithoutFilter(response.data.ordered);
     }
 
     function handleSubmit(e) {
@@ -293,15 +307,52 @@ export function Home() {
                 });
         }
 
-        getInfoUser()
+        getInfoUser();
+    }
+
+    const [itemOffset, setItemOffset] = useState(0);
+    const itemsPerPage = 10;
+
+    function handlePageClick(selected) {
+        const offset = selected.selected * itemsPerPage;
+        setItemOffset(offset);
+    }
+
+    function handleDatePicker() {
+        const initialDate = dayjs(value[0], 'DD/MM/YYYY').format('DD/MM/YYYY') || null;
+        const finalDate = dayjs(value[1], 'DD/MM/YYYY').format('DD/MM/YYYY') || null;
+
+        const journeyList = listJourneyWithoutFilter;
+
+        let filter2 = '';
+        if (filter === 'book') {
+            filter2 = 'books_history';
+        } else if (filter === 'All') {
+            const filtered = journeyList.filter((item) => {
+                const formattedDate = dayjs(item.created_at, 'DD/MM/YYYY').format('DD/MM/YYYY');
+                return formattedDate >= initialDate && formattedDate <= finalDate
+            });
+            setListJourney(filtered);
+            return;
+        }
+
+        const filtered = journeyList.filter((item) => {
+            const formattedDate = dayjs(item.created_at, 'DD/MM/YYYY').format('DD/MM/YYYY');
+            return (
+                (formattedDate >= initialDate && formattedDate <= finalDate && item.source == filter) ||
+                item.source == filter2
+            );
+        });
+
+        setListJourney(filtered);
     }
 
     useEffect(() => {
         getInfoUser();
 
-        const userName = localStorage.getItem('@username')
+        const userName = localStorage.getItem('@username');
 
-        setUsername(userName)
+        setUsername(userName);
     }, []);
 
     function clearMessage(time) {
@@ -639,37 +690,68 @@ export function Home() {
             </Charts>
 
             <Journey>
-                {listJourney.length > 0 &&
-                    listJourney.map((item, index) => {
-                        const clearDate = dayjs(item.created_at).format('DD/MM/YYYY');
-
-                        return (
-                            <JourneyCard
-                                key={index}
-                                icon={item.source}
-                                title={item.source}
-                                describe={item.title}
-                                time={item.time}
-                                words={item.total_words}
-                                date={clearDate}
-                                withoutTitle={item.type}
-                                tl={item.target_language}
-                                reviewed={item.reviewed ? "Reviewed " + item.reviewed : null}
-                                added={item.added_cards ? "Added Cards " + item.added_cards : null}
-                                total={item.vocabulary ? "Vocabulary " + item.vocabulary : null}
-                                diff={item.diff_last ? "Difference " + item.diff_last : null}
+                <Filter>
+                    <h1>Your History</h1>
+                    <div>
+                        <selection>
+                            <p>Select What you want to see</p>
+                            <select name="filterValue" onChange={(e) => setFilter(e.target.value)} value={filter}>
+                                <option value="All">All</option>
+                                <option value="Youtube">Youtube</option>
+                                <option value="Podcast">Podcast</option>
+                                <option value="Movie">Movie</option>
+                                <option value="talk">Talk</option>
+                                <option value="anki">Anki</option>
+                                <option value="books">Read</option>
+                                <option value="vocabulary">Vocabulary Test</option>
+                            </select>
+                        </selection>
+                        <section>
+                            <p>Select the date</p>
+                            <DateRangePicker
+                                calendarAriaLabel="Toggle calendar"
+                                clearAriaLabel="Clear value"
+                                dayAriaLabel="Day"
+                                monthAriaLabel="Month"
+                                nativeInputAriaLabel="Date"
+                                onChange={onChange}
+                                value={value}
+                                yearAriaLabel="Year"
                             />
-                        );
-                    })}
-                <JourneyCard
-                    icon={youtube}
-                    title={'Youtube'}
-                    describe={'Harry Potter and The Chamber of Secrets'}
-                    date={'01/01/2024'}
-                    time={'00:13:32'}
-                    words={'12312'}
-                    withoutTitle={'AudioBook'}
+                        </section>
+                    </div>
+                    <Button text={'Filter'} onClick={() => handleDatePicker()} />
+                </Filter>
+                <ReactPaginate
+                    breakLabel="..."
+                    nextLabel=">"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={5}
+                    pageCount={Math.ceil(listJourney.length / itemsPerPage)} // Calculate total pages
+                    previousLabel="<"
+                    renderOnZeroPageCount={null}
                 />
+
+                {listJourney.slice(itemOffset, itemOffset + itemsPerPage).map((item, index) => {
+                    const clearDate = dayjs(item.created_at).format('DD/MM/YYYY');
+                    return (
+                        <JourneyCard
+                            key={index}
+                            icon={item.source}
+                            title={item.source}
+                            describe={item.title}
+                            time={item.time}
+                            words={item.total_words}
+                            date={clearDate}
+                            withoutTitle={item.type}
+                            tl={item.target_language}
+                            reviewed={item.reviewed ? 'Reviewed ' + item.reviewed : null}
+                            added={item.added_cards ? 'Added Cards ' + item.added_cards : null}
+                            total={item.vocabulary ? 'Vocabulary ' + item.vocabulary : null}
+                            diff={item.diff_last ? 'Difference ' + item.diff_last : null}
+                        />
+                    );
+                })}
             </Journey>
         </>
     );

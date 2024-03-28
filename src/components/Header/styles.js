@@ -5,6 +5,7 @@ export const Container = styled.header`
     height: 70px;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
     margin-bottom: 40px;
+    color: ${({theme}) => theme.COLORS.WHITE};
 
     display: flex;
     justify-content: space-between;
