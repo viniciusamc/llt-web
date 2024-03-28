@@ -101,8 +101,6 @@ export function Home() {
         const books = await api.get('/v1/books');
         const talk = await api.get('/v1/talk');
 
-        console.log(response.data);
-
         setTotalTime(response.data.totalTime);
         setStreak(response.data.streak.currentStreak);
         setLongestStreak(response.data.streak.longestStreak);
