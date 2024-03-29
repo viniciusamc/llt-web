@@ -304,7 +304,10 @@ export function Home() {
         let filter2 = '';
         if (filter === 'book') {
             filter2 = 'books_history';
-        } else if (filter === 'All') {
+        } else if (filter == 'Youtube'){
+            filter2 = 'videos'
+        }
+        else if (filter === 'All') {
             const filtered = journeyList.filter((item) => {
                 const formattedDate = dayjs(item.created_at, 'DD/MM/YYYY').format('DD/MM/YYYY');
                 return formattedDate >= initialDate && formattedDate <= finalDate;
