@@ -680,11 +680,11 @@ export function Home() {
                         style={{ color: 'white' }}
                         panelColors={{
                             0: '#221e22',
-                            2: '#C94B4B',
-                            4: '#C94B4B',
+                            1: '#F78D8D',
+                            2: '#EC7D7D',
+                            4: '#E06C6C',
+                            6: '#D55C5C',
                             10: '#C94B4B',
-                            20: '#C94B4B',
-                            30: '#C94B4B',
                         }}
                         rectRender={(props, data) => {
                             return (
