@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const Container = styled.section`
     width: 90vw;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
-    color: ${({theme}) => theme.COLORS.WHITE};
+    color: ${({ theme }) => theme.COLORS.WHITE};
     border-radius: 8px;
     margin: 40px auto 0;
 
@@ -19,6 +19,7 @@ export const Top = styled.div`
     padding: 15px;
     border-bottom: 1px solid #fff6;
     text-transform: capitalize;
+    position: relative;
 
     > div {
         display: flex;
@@ -52,7 +53,6 @@ export const Top = styled.div`
 export const Bottom = styled.div`
     display: flex;
     flex-direction: column;
-    
 
     padding: 15px;
 

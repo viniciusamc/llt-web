@@ -55,6 +55,8 @@ export function Home() {
 
     const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
 
+    const [globalSuccessMessage, setGlobalSuccessMessage] = useState('');
+
     const [successMessage, setSuccessMessage] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -287,6 +289,20 @@ export function Home() {
         getInfoUser();
     }
 
+    function handleDelete(source, id) {
+        if (source == 'Podcast' || source == 'Youtube') {
+            api.delete(`/v1/medias/${id}`)
+                .then((response) => {
+                    setInfoMessage('Media Deleted With Success!');
+                    clearMessage();
+                })
+                .catch((e) => {
+                    setErrorMessage('Was not possible to delete this content, try again later');
+                    clearMessage();
+                });
+        }
+    }
+
     const [itemOffset, setItemOffset] = useState(0);
     const itemsPerPage = 10;
 
@@ -304,10 +320,9 @@ export function Home() {
         let filter2 = '';
         if (filter === 'book') {
             filter2 = 'books_history';
-        } else if (filter == 'Youtube'){
-            filter2 = 'videos'
-        }
-        else if (filter === 'All') {
+        } else if (filter == 'Youtube') {
+            filter2 = 'videos';
+        } else if (filter === 'All') {
             const filtered = journeyList.filter((item) => {
                 const formattedDate = dayjs(item.created_at, 'DD/MM/YYYY').format('DD/MM/YYYY');
                 return formattedDate >= initialDate && formattedDate <= finalDate;
@@ -339,6 +354,7 @@ export function Home() {
         setTimeout(
             () => {
                 setSuccessMessage('');
+                setGlobalSuccessMessage('');
                 setInfoMessage('');
                 setErrorMessage('');
             },
@@ -668,7 +684,13 @@ export function Home() {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="totalTime" name='Total Hours'  stroke="#8884d8" activeDot={{ r: 8 }} />
+                        <Line
+                            type="monotone"
+                            dataKey="totalTime"
+                            name="Total Hours"
+                            stroke="#8884d8"
+                            activeDot={{ r: 8 }}
+                        />
                     </LineChart>
                 </Chart>
             </Charts>
@@ -705,6 +727,9 @@ export function Home() {
                         </section>
                     </div>
                     <Button text={'Filter'} onClick={() => handleDatePicker()} />
+                    {successMessage && <Flash level={1} message={successMessage} />}
+                    {infoMessage && <Flash level={2} message={infoMessage} />}
+                    {errorMessage && <Flash level={3} message={errorMessage} />}
                 </Filter>
                 <ReactPaginate
                     breakLabel="..."
@@ -733,6 +758,7 @@ export function Home() {
                             added={item.added_cards ? 'Added Cards ' + item.added_cards : null}
                             total={item.vocabulary ? 'Vocabulary ' + item.vocabulary : null}
                             diff={item.diff_last ? 'Difference ' + item.diff_last : null}
+                            onClick={() => handleDelete(item.source, item.id)}
                         />
                     );
                 })}

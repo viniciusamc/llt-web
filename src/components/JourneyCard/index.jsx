@@ -7,8 +7,9 @@ import podcast from '../../assets/podcast.svg';
 import movie from '../../assets/movie.svg';
 import book from '../../assets/book.svg';
 import iso6391 from 'iso-639-1';
+import { MdDelete } from "react-icons/md";
 
-export function JourneyCard({ icon, title, date, time, describe, words, tl, ...rest }) {
+export function JourneyCard({ icon, title, date, time, describe, words, tl, onClick, ...rest }) {
     let cardIcon;
 
     const languageName = iso6391.getName(tl);
@@ -49,6 +50,7 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, ...r
                     <p>{time}</p>
                     {words == 0 && <p>Subtitles weren't available</p>}
                     {words > 0 && <p>Words {words}</p>}
+                    <MdDelete style={{cursor: 'pointer'}} onClick={onClick} fontSize={32}/>
                 </div>
             </Bottom>
         </Container>
