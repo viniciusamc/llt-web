@@ -1,5 +1,6 @@
 import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form, Filter } from './styles';
 
+import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 import { Header } from '../../components/Header';
 import { Input } from '../../components/Input/index.jsx';
 import { Button } from '../../components/Button/index.jsx';
@@ -18,12 +19,12 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
-import { JourneyCard } from '../../components/JourneyCard/index.jsx';
+import HeatMap from '@uiw/react-heat-map';
+import ToolTipHeatMap from '@uiw/react-tooltip';
 
 import { api } from '../../services/api.js';
-import { useEffect } from 'react';
 
 import add from '../../assets/add.svg';
 import close from '../../assets/close.svg';
@@ -62,6 +63,7 @@ export function Home() {
     const [errorMessage, setErrorMessage] = useState('');
 
     const [chartMonthHour, setChartMonthHour] = useState([]);
+    const [heatMap, setHeatMap] = useState([]);
     const [chartMonthCumulative, setChartMonthCumulative] = useState([]);
 
     const [totalTime, setTotalTime] = useState('00:00:00');
@@ -126,6 +128,7 @@ export function Home() {
         setListJourney(response.data.ordered);
         setListJourneyWithoutFilter(response.data.ordered);
 
+        setHeatMap(response.data.heatMap);
         setChartMonthHour(response.data.hoursByMonth.reverse());
         const cumulativeHours = [];
         let cumulativeSum = 0;
@@ -666,6 +669,31 @@ export function Home() {
                             activeDot={{ r: 8 }}
                         />
                     </LineChart>
+                </Chart>
+                <Chart>
+                    <HeatMap
+                        value={heatMap}
+                        weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
+                        rectSize={12}
+                        startDate={new Date('2024/01/01')}
+                        endDate={new Date()}
+                        style={{ color: 'white' }}
+                        panelColors={{
+                            0: '#221e22',
+                            2: '#C94B4B',
+                            4: '#C94B4B',
+                            10: '#C94B4B',
+                            20: '#C94B4B',
+                            30: '#C94B4B',
+                        }}
+                        rectRender={(props, data) => {
+                            return (
+                                <ToolTipHeatMap placement="top" content={`Total Activities in ${data.date}: ${data.count || 0}`}>
+                                    <rect {...props} />
+                                </ToolTipHeatMap>
+                            );
+                        }}
+                    />
                 </Chart>
                 <Chart>
                     <LineChart
