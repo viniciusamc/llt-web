@@ -50,7 +50,7 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
                     <p>{time}</p>
                     {words == 0 && <p>Subtitles weren't available</p>}
                     {words > 0 && <p>Words {words}</p>}
-                    <MdDelete style={{cursor: 'pointer'}} onClick={onClick} fontSize={32}/>
+                    <MdDelete style={{cursor: 'pointer', fill: '#F03C3C'}} onClick={onClick} fontSize={32}/>
                 </div>
             </Bottom>
         </Container>
