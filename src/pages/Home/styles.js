@@ -172,22 +172,26 @@ export const Charts = styled.section`
     justify-content: center;
     gap: 28px;
 
-    @media (min-width: 1024px) {
+    @media (min-width: 1470px) {
         flex-direction: row;
         justify-content: space-between;
     }
 `;
 
 export const Chart = styled.section`
-    padding: 20px;
-    width: 90vw;
-    max-width: 400px;
+    padding: 40px;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
     border-radius: 8px;
 
     display: flex;
     justify-content: center;
     align-items: center;
+    color: ${({theme}) => theme.COLORS.WHITE};
+
+    > div {
+        display: flex;
+        flex-direction: column;
+    }
 `;
 
 export const Journey = styled.section`

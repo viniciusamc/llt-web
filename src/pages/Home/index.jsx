@@ -32,7 +32,7 @@ import close from '../../assets/close.svg';
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
 
-const wsz = 420;
+const wsz = 320;
 const hsz = 320;
 
 export function Home() {
@@ -104,6 +104,8 @@ export function Home() {
         const vocabulary = await api.get('/v1/vocabulary');
         const books = await api.get('/v1/books');
         const talk = await api.get('/v1/talk');
+
+        console.log(response.data);
 
         setTotalTime(response.data.totalTime);
         setStreak(response.data.streak.currentStreak);
@@ -674,53 +676,57 @@ export function Home() {
                     <HeatMap
                         value={heatMap}
                         weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
-                        rectSize={12}
+                        rectSize={14}
                         startDate={new Date('2024/01/01')}
-                        endDate={new Date()}
                         style={{ color: 'white' }}
                         panelColors={{
                             0: '#221e22',
-                            1: '#F78D8D',
-                            2: '#EC7D7D',
-                            4: '#E06C6C',
-                            6: '#D55C5C',
-                            10: '#C94B4B',
+                            10: '#14532d',
+                            30: '#166534',
+                            40: '#166534',
+                            60: '#15803d',
+                            120: '#16a34a',
                         }}
                         rectRender={(props, data) => {
                             return (
-                                <ToolTipHeatMap placement="top" content={`Total Activities in ${data.date}: ${data.count || 0}`}>
+                                <ToolTipHeatMap
+                                    placement="top"
+                                    content={`Time ${data.date}: ${data.count || 0} minutes`}
+                                >
                                     <rect {...props} />
                                 </ToolTipHeatMap>
                             );
                         }}
                     />
                 </Chart>
-                <Chart>
-                    <LineChart
-                        width={wsz}
-                        height={hsz}
-                        data={chartMonthCumulative}
-                        margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="monthYear" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="totalTime"
-                            name="Total Hours"
-                            stroke="#8884d8"
-                            activeDot={{ r: 8 }}
-                        />
-                    </LineChart>
-                </Chart>
+                {
+                    <Chart>
+                        <LineChart
+                            width={wsz}
+                            height={hsz}
+                            data={chartMonthCumulative}
+                            margin={{
+                                top: 5,
+                                right: 30,
+                                left: 20,
+                                bottom: 5,
+                            }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="monthYear" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line
+                                type="monotone"
+                                dataKey="totalTime"
+                                name="Total Hours"
+                                stroke="#8884d8"
+                                activeDot={{ r: 8 }}
+                            />
+                        </LineChart>
+                    </Chart>
+                }
             </Charts>
 
             <Journey>
