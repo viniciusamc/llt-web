@@ -1,5 +1,7 @@
 import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form, Filter } from './styles';
 
+import axios from 'axios';
+
 import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 import { Header } from '../../components/Header';
 import { Input } from '../../components/Input/index.jsx';
@@ -100,54 +102,63 @@ export function Home() {
     const [listJourneyWithoutFilter, setListJourneyWithoutFilter] = useState([]);
 
     async function getInfoUser() {
-        const response = await api.get('/v1/users/user');
-        const vocabulary = await api.get('/v1/vocabulary');
-        const books = await api.get('/v1/books');
-        const talk = await api.get('/v1/talk');
+        axios
+            .all([api.get('/v1/users/user'), api.get('/v1/vocabulary'), api.get('/v1/books'), api.get('/v1/talk')])
+            .then(
+                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse) => {
+                    const response = userResponse;
+                    const vocabulary = vocabularyResponse;
+                    const books = booksResponse;
+                    const talk = talkResponse;
 
-        setTotalTime(response.data.totalTime);
-        setStreak(response.data.streak.currentStreak);
-        setLongestStreak(response.data.streak.longestStreak);
+                    setTotalTime(response.data.totalTime);
+                    setStreak(response.data.streak.currentStreak);
+                    setLongestStreak(response.data.streak.longestStreak);
 
-        setVocabularyAverage(vocabulary.data.average);
-        setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary);
+                    setVocabularyAverage(vocabulary.data.average);
+                    setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary);
 
-        setMediasWords(response.data.totalWordsMedia);
-        setTotalTitmeYTBPD(response.data.mediasTotalTime);
+                    setMediasWords(response.data.totalWordsMedia);
+                    setTotalTitmeYTBPD(response.data.mediasTotalTime);
 
-        setBooksWords(books.data.totalBooksWords);
-        setBooksTotalPages(books.data.totalBooksPages);
-        setBooksTotalTime(books.data.totalTimeBooks);
-        setBooks(books.data.books.length);
+                    setBooksWords(books.data.totalBooksWords);
+                    setBooksTotalPages(books.data.totalBooksPages);
+                    setBooksTotalTime(books.data.totalTimeBooks);
+                    setBooks(books.data.books.length);
 
-        setTalk(talk.data.output.length);
-        setTalkTotalTime(talk.data.outputTotalTime);
-        setTalkAverage(talk.data.averageTime);
-        setTalkStreak(talk.data.outputStreak.currentStreak);
+                    setTalk(talk.data.output.length);
+                    setTalkTotalTime(talk.data.outputTotalTime);
+                    setTalkAverage(talk.data.averageTime);
+                    setTalkStreak(talk.data.outputStreak.currentStreak);
 
-        setListJourney(response.data.ordered);
-        setListJourneyWithoutFilter(response.data.ordered);
+                    setListJourney(response.data.ordered);
+                    setListJourneyWithoutFilter(response.data.ordered);
 
-        setHeatMap(response.data.heatMap);
-        setChartMonthHour(response.data.hoursByMonth.reverse());
-        const cumulativeHours = [];
-        let cumulativeSum = 0;
+                    setHeatMap(response.data.heatMap);
+                    setChartMonthHour(response.data.hoursByMonth.reverse());
+                    const cumulativeHours = [];
+                    let cumulativeSum = 0;
 
-        for (let i = 0; i < response.data.hoursByMonth.length; i++) {
-            const currentMonthYear = response.data.hoursByMonth[i].monthYear;
-            const currentTotalTime = response.data.hoursByMonth[i].totalTime;
+                    for (let i = 0; i < response.data.hoursByMonth.length; i++) {
+                        const currentMonthYear = response.data.hoursByMonth[i].monthYear;
+                        const currentTotalTime = response.data.hoursByMonth[i].totalTime;
 
-            cumulativeSum += currentTotalTime;
+                        cumulativeSum += currentTotalTime;
 
-            const cumulativeObject = {
-                monthYear: currentMonthYear,
-                totalTime: cumulativeSum,
-            };
+                        const cumulativeObject = {
+                            monthYear: currentMonthYear,
+                            totalTime: cumulativeSum,
+                        };
 
-            cumulativeHours.push(cumulativeObject);
-        }
+                        cumulativeHours.push(cumulativeObject);
+                    }
 
-        setChartMonthCumulative(cumulativeHours);
+                    setChartMonthCumulative(cumulativeHours);
+                }),
+            )
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
     function handleSubmit(e) {
         e.preventDefault();
