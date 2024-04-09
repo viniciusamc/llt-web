@@ -33,6 +33,8 @@ import close from '../../assets/close.svg';
 
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
+import Axios from 'axios';
+import { setupCache } from 'axios-cache-interceptor';
 
 const wsz = 320;
 const hsz = 320;
@@ -55,6 +57,9 @@ export function Home() {
         vocabularyNew: '',
         vocabularyWhen: '',
     };
+
+    const instance = Axios.create();
+    const axiosCache = setupCache(instance);
 
     const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
 

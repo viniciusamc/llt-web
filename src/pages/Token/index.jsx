@@ -16,14 +16,14 @@ export function Token() {
                 const response = await api.get(`/v1/users/token/${token}`);
 
                 if (response.status === 201) {
-                    setStatus(200)
+                    setStatus(200);
                     setTimeout(() => {
                         window.location.href = '/';
                     }, 5000);
                 }
             } catch (error) {
                 setErrorMessage('Was not possible to active your account, please try again');
-                console.error(error)
+                console.error(error);
             }
         }
 
@@ -40,12 +40,18 @@ export function Token() {
                 height: '90vh',
                 margin: '0 auto',
                 textAlign: 'center',
+                color: '#fff',
             }}
         >
-        <Flash level={3} message={errorMessage} />
+            {errorMessage && <Flash level={3} message={errorMessage} />}
             {status && (
                 <>
-                    <h4>Your account has been activated. You can now sign in.</h4>
+                    <h4>
+                        Your account has been activated. You can now{' '}
+                        <a href="/" style={{ color: '#F75050' }}>
+                            sign in.
+                        </a>
+                    </h4>
                     <h1>Thanks.</h1>
                 </>
             )}

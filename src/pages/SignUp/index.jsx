@@ -50,7 +50,7 @@ export function SignUp() {
             .then((response) => {
                 setSuccessMessage('Account Created! Verify your email!');
                 setTimeout(() => {
-                    window.location.href = '/login';
+                    window.location.href = '/';
                 }, 2500);
             })
             .catch((e) => {
@@ -78,7 +78,7 @@ export function SignUp() {
                 <Input type={'text'} label={'Username'} placeholder={'example'} required name={'username'} />
                 <Input type={'email'} label={'Email'} placeholder={'example@example.com'} required name={'email'} />
                 <Input type={'password'} label={'Password'} placeholder={'******'} required={true} name={'password'} />
-                <Button type="submit" text={'Submit'} />
+                <Button type="submit" text={'Sign Up'} />
             </Form>
         </>
     );
