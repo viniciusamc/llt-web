@@ -32,18 +32,18 @@ export const User = styled.div`
 
     text-align: right;
 
-    > h6 {
+    > h5 {
         font-size: 1.2rem;
         font-weight: 400;
     }
 
-    > h7 {
+    > h6 {
         font-size: 1rem;
         font-weight: 300;
         cursor: pointer;
     }
 
-    > h7:hover {
+    > h6:hover {
         color: red;
         transition: all .3s ease-out;
     }

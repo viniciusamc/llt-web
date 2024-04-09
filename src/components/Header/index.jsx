@@ -27,8 +27,8 @@ export function Header() {
                 </Logo>
 
                 <User>
-                    <h6>Hello, {username}</h6>
-                    <h7 onClick={() => {signOut()}}>Logout </h7>
+                    <h5>Hello, {username}</h5>
+                    <h6 onClick={() => {signOut()}}>Logout </h6>
                 </User>
             </div>
         </Container>
