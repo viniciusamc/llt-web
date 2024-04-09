@@ -5,7 +5,7 @@ export const Container = styled.header`
     height: 70px;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
     margin-bottom: 40px;
-    color: ${({theme}) => theme.COLORS.WHITE};
+    color: ${({ theme }) => theme.COLORS.WHITE};
 
     display: flex;
     justify-content: space-between;
@@ -23,18 +23,25 @@ export const Container = styled.header`
 export const Logo = styled.div`
     > h4 {
         font-size: 0.8rem;
+        cursor: pointer;
     }
 `;
 
 export const User = styled.div`
     display: flex;
-    flex-direction: column;
-
+    gap: 12px;
+    align-items: center;
     text-align: right;
 
     > h5 {
         font-size: 1.2rem;
         font-weight: 400;
+    }
+
+    h5:hover {
+        cursor: pointer;
+        color: ${({ theme }) => theme.COLORS.PRIMARY};
+        transition: all 0.3s ease-out;
     }
 
     > h6 {
@@ -45,7 +52,7 @@ export const User = styled.div`
 
     > h6:hover {
         color: red;
-        transition: all .3s ease-out;
+        transition: all 0.3s ease-out;
     }
 `;
 

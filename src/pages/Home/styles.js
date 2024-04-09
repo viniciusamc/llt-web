@@ -168,14 +168,8 @@ export const Charts = styled.section`
 
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
     gap: 28px;
-
-    @media (min-width: 1470px) {
-        flex-direction: row;
-        justify-content: space-between;
-    }
 `;
 
 export const Chart = styled.section`
@@ -184,6 +178,7 @@ export const Chart = styled.section`
     border-radius: 8px;
 
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     color: ${({theme}) => theme.COLORS.WHITE};

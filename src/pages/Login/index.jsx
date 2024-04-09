@@ -68,7 +68,7 @@ export function Login() {
                 <Bottom>
                     <p>
                         {' '}
-                        Don't have an account? <a href="/signup"> Sign Up</a>
+                        Don't have an account? <a href="/signup" style={{color: '#C94B4B'}}> Sign Up</a>
                     </p>
                 </Bottom>
             </Form>

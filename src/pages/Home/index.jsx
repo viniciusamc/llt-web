@@ -37,6 +37,9 @@ import Axios from 'axios';
 import { setupCache } from 'axios-cache-interceptor';
 import { Footer } from '../../components/Footer/index.jsx';
 
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+
 const wsz = 320;
 const hsz = 320;
 
@@ -72,11 +75,15 @@ export function Home() {
 
     const [chartMonthHour, setChartMonthHour] = useState([]);
     const [heatMap, setHeatMap] = useState([]);
+    const [heatMapStartDate, setHeatMapStartdate] = useState(new Date(2023));
     const [chartMonthCumulative, setChartMonthCumulative] = useState([]);
 
     const [totalTime, setTotalTime] = useState('00:00:00');
     const [streak, setStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
+    const [daysOfImmersion, setDaysOfImmersion] = useState(0);
+    const [dailyGoal, setDailyGoal] = useState(0)
+    const [dailyGoalDid, setDailyGoalDid] = useState(0)
 
     const [vocabularyAverage, setVocabularyAverage] = useState(0);
     const [vocabulary, setVocabulary] = useState(0);
@@ -109,10 +116,11 @@ export function Home() {
 
     async function getInfoUser() {
         axios
-            .all([api.get('/v1/users/user'), api.get('/v1/vocabulary'), api.get('/v1/books'), api.get('/v1/talk')])
+            .all([api.get('/v1/users/user'), api.get('/v1/vocabulary'), api.get('/v1/books'), api.get('/v1/talk'), api.get('/v1/users')])
             .then(
-                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse) => {
+                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs) => {
                     const response = userResponse;
+                    const user = userConfigs;
                     const vocabulary = vocabularyResponse;
                     const books = booksResponse;
                     const talk = talkResponse;
@@ -140,7 +148,16 @@ export function Home() {
                     setListJourney(response.data.ordered);
                     setListJourneyWithoutFilter(response.data.ordered);
 
+                    setDaysOfImmersion(response.data.heatMap.length);
+
+                    const heatMapStart = new Date(response.data.heatMap[0].date);
+                    setHeatMapStartdate(heatMapStart);
                     setHeatMap(response.data.heatMap);
+                    
+                    const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+                    const todayGoal = response.data.heatMap.filter(entry => entry.date === today);
+                    setDailyGoal(user.data.configs.dailyGoal)
+                    setDailyGoalDid(todayGoal[0].count)
                     setChartMonthHour(response.data.hoursByMonth.reverse());
                     const cumulativeHours = [];
                     let cumulativeSum = 0;
@@ -363,7 +380,7 @@ export function Home() {
                 });
         }
 
-        if(source == 'vocabulary'){
+        if (source == 'vocabulary') {
             api.delete(`/v1/vocabulary/${id}`)
                 .then((response) => {
                     setInfoMessage('Vocabulary Deleted with Sucess!');
@@ -373,7 +390,6 @@ export function Home() {
                     setErrorMessage('Was not possible to delete this content, try again later');
                     clearMessage();
                 });
-
         }
 
         getInfoUser();
@@ -418,369 +434,355 @@ export function Home() {
         setListJourney(filtered);
     }
 
-useEffect(() => {
-    getInfoUser();
+    useEffect(() => {
+        getInfoUser();
 
-    const userName = localStorage.getItem('@username');
+        const userName = localStorage.getItem('@username');
 
-    setUsername(userName);
-}, []);
+        setUsername(userName);
+    }, []);
 
-function clearMessage(time) {
-    setTimeout(
-        () => {
-            setSuccessMessage('');
-            setGlobalSuccessMessage('');
-            setInfoMessage('');
-            setErrorMessage('');
-        },
-        time ? time : 2500,
-    );
-}
+    function clearMessage(time) {
+        setTimeout(
+            () => {
+                setSuccessMessage('');
+                setGlobalSuccessMessage('');
+                setInfoMessage('');
+                setErrorMessage('');
+            },
+            time ? time : 2500,
+        );
+    }
 
-function handleModal() {
-    setModal(!modal);
-}
+    function handleModal() {
+        setModal(!modal);
+    }
 
-function handleInputChange(event) {
-    const { name, value } = event.target;
-    setFormData({
-        ...formData,
-        [name]: value,
-    });
-}
+    function handleInputChange(event) {
+        const { name, value } = event.target;
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    }
 
-function handleFileChange(event) {
-    const { name, files } = event.target;
-    setFormData({
-        ...formData,
-        [name]: files[0],
-    });
-}
+    function handleFileChange(event) {
+        const { name, files } = event.target;
+        setFormData({
+            ...formData,
+            [name]: files[0],
+        });
+    }
 
-return (
-    <>
-        <Header />
-        <CreateSection onClick={() => handleModal()}>
-            <h4>Hello, update your records</h4>
-            <button>
-                <img src={add} alt="Add" />
-            </button>
-        </CreateSection>
-        {modal && (
-            <>
-                <Overlay onClick={handleModal} />
-                <Modal>
-                    <Top>
-                        {username && <label>Hello {username}</label>}{' '}
-                        <img src={close} alt="close" onClick={handleModal} />
-                    </Top>
-                    <Form name="form">
-                        {successMessage && <Flash level={1} message={successMessage} />}
-                        {infoMessage && <Flash level={2} message={infoMessage} />}
-                        {errorMessage && <Flash level={3} message={errorMessage} />}
-                        <div>
-                            <label>What did you do today?</label>
-                            <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
-                                <option value="Youtube">Youtube</option>
-                                <option value="Podcast">Podcast (Only in Youtube)</option>
-                                <option value="Movie">Movie</option>
-                                <option value="Talk">Talk</option>
-                                <option value="Anki">Anki</option>
-                                <option value="Read">Read</option>
-                                <option value="Vocabulary Test">Vocabulary Test</option>
-                            </select>
-                        </div>
-                        {(formData.modalValue === 'Youtube' || formData.modalValue === 'Podcast') && (
-                            <>
-                                <div>
-                                    <label>How?</label>
-                                    <select
-                                        name="youtubeHow"
-                                        onChange={handleInputChange}
-                                        value={formData.youtubeHow}
-                                    >
-                                        <option value="Active">Active</option>
-                                        <option value="Passive">Passive</option>
-                                    </select>
-                                </div>
-                                <Input
-                                    label="Insert the URL of the Video (Youtube)"
-                                    placeholder={'www.youtube.com/example'}
-                                    name="youtubeUrl"
-                                    onChange={handleInputChange}
-                                    value={formData.youtubeUrl}
-                                />
-                            </>
-                        )}
-                        {formData.modalValue === 'Movie' && (
-                            <>
-                                <div>
-                                    <label>How?</label>
-                                    <select name="movieHow" onChange={handleInputChange} value={formData.movieHow}>
-                                        <option value="Active">Active</option>
-                                        <option value="Passive">Passive</option>
-                                    </select>
-                                </div>
-                                <Input
-                                    type="text"
-                                    name="movieWhich"
-                                    label="Which Movie/TV Show?"
-                                    value={formData.movieWhich}
-                                    onChange={handleInputChange}
-                                />
-                                <Input
-                                    label="Send the Subtitles"
-                                    type="file"
-                                    name="movieFile"
-                                    onChange={handleFileChange}
-                                />
-                                <Input
-                                    label={'How long?'}
-                                    type="number"
-                                    name="movieLong"
-                                    placeholder="In minutes"
-                                    onChange={handleInputChange}
-                                />
-                            </>
-                        )}
-                        {formData.modalValue === 'Talk' && (
-                            <>
-                                <div>
-                                    <label>How?</label>
-                                    <select name="talkHow" onChange={handleInputChange} value={formData.talkHow}>
-                                        <option value="Chatting">Chatting</option>
-                                        <option value="Debating">Debating</option>
-                                    </select>
-                                </div>
-                                <Input
-                                    type="number"
-                                    name="talkLong"
-                                    label="How long?"
-                                    placeholder={'In Minutes'}
-                                    value={formData.talkLong}
-                                    onChange={handleInputChange}
-                                />
-                            </>
-                        )}
-                        {formData.modalValue === 'Anki' && (
-                            <>
-                                <div style={{ display: 'flex', gap: '8px' }}>
+    return (
+        <>
+            <Header />
+            <CreateSection onClick={() => handleModal()}>
+                <h4>Hello, update your records</h4>
+                <button>
+                    <img src={add} alt="Add" />
+                </button>
+            </CreateSection>
+            {modal && (
+                <>
+                    <Overlay onClick={handleModal} />
+                    <Modal>
+                        <Top>
+                            {username && <label>Hello {username}</label>}{' '}
+                            <img src={close} alt="close" onClick={handleModal} />
+                        </Top>
+                        <Form name="form">
+                            {successMessage && <Flash level={1} message={successMessage} />}
+                            {infoMessage && <Flash level={2} message={infoMessage} />}
+                            {errorMessage && <Flash level={3} message={errorMessage} />}
+                            <div>
+                                <label>What did you do today?</label>
+                                <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
+                                    <option value="Youtube">Youtube</option>
+                                    <option value="Podcast">Podcast (Only in Youtube)</option>
+                                    <option value="Movie">Movie</option>
+                                    <option value="Talk">Talk</option>
+                                    <option value="Anki">Anki</option>
+                                    <option value="Read">Read</option>
+                                    <option value="Vocabulary Test">Vocabulary Test</option>
+                                </select>
+                            </div>
+                            {(formData.modalValue === 'Youtube' || formData.modalValue === 'Podcast') && (
+                                <>
+                                    <div>
+                                        <label>How?</label>
+                                        <select
+                                            name="youtubeHow"
+                                            onChange={handleInputChange}
+                                            value={formData.youtubeHow}
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Passive">Passive</option>
+                                        </select>
+                                    </div>
                                     <Input
-                                        type="number"
-                                        name="ankiNew"
-                                        label="New Cards"
-                                        placeholder={'New Cards'}
-                                        value={formData.ankiNew}
+                                        label="Insert the URL of the Video (Youtube)"
+                                        placeholder={'www.youtube.com/example'}
+                                        name="youtubeUrl"
+                                        onChange={handleInputChange}
+                                        value={formData.youtubeUrl}
+                                    />
+                                </>
+                            )}
+                            {formData.modalValue === 'Movie' && (
+                                <>
+                                    <div>
+                                        <label>How?</label>
+                                        <select name="movieHow" onChange={handleInputChange} value={formData.movieHow}>
+                                            <option value="Active">Active</option>
+                                            <option value="Passive">Passive</option>
+                                        </select>
+                                    </div>
+                                    <Input
+                                        type="text"
+                                        name="movieWhich"
+                                        label="Which Movie/TV Show?"
+                                        value={formData.movieWhich}
                                         onChange={handleInputChange}
                                     />
                                     <Input
+                                        label="Send the Subtitles"
+                                        type="file"
+                                        name="movieFile"
+                                        onChange={handleFileChange}
+                                    />
+                                    <Input
+                                        label={'How long?'}
                                         type="number"
-                                        name="ankiReviewed"
-                                        label="Reviewed Anki"
-                                        placeholder={'Reviewed Cards'}
-                                        value={formData.ankiReviewed}
+                                        name="movieLong"
+                                        placeholder="In minutes"
                                         onChange={handleInputChange}
                                     />
-                                </div>
-                                <Input
-                                    type="number"
-                                    name="ankiLong"
-                                    label="How long?"
-                                    placeholder={'In Minutes'}
-                                    value={formData.ankiLong}
-                                    onChange={handleInputChange}
-                                />
-                            </>
-                        )}
-                        {formData.modalValue === 'Vocabulary Test' && (
-                            <>
-                                <Input
-                                    type="number"
-                                    name="vocabularyNew"
-                                    label="How Much?"
-                                    placeholder={'Total Vocabulary'}
-                                    value={formData.vocabularyNew}
-                                    onChange={handleInputChange}
-                                />
-                                <Input
-                                    type="date"
-                                    name="vocabularyWhen"
-                                    label="When?"
-                                    value={formData.vocabularyWhen}
-                                    onChange={handleInputChange}
-                                />
-                            </>
-                        )}
-                        <Button onClick={handleSubmit} type="button" disabled={isLoading} text={'Submit'} />
-                    </Form>
-                </Modal>
-            </>
-        )}
+                                </>
+                            )}
+                            {formData.modalValue === 'Talk' && (
+                                <>
+                                    <div>
+                                        <label>How?</label>
+                                        <select name="talkHow" onChange={handleInputChange} value={formData.talkHow}>
+                                            <option value="Chatting">Chatting</option>
+                                            <option value="Debating">Debating</option>
+                                        </select>
+                                    </div>
+                                    <Input
+                                        type="number"
+                                        name="talkLong"
+                                        label="How long?"
+                                        placeholder={'In Minutes'}
+                                        value={formData.talkLong}
+                                        onChange={handleInputChange}
+                                    />
+                                </>
+                            )}
+                            {formData.modalValue === 'Anki' && (
+                                <>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <Input
+                                            type="number"
+                                            name="ankiNew"
+                                            label="New Cards"
+                                            placeholder={'New Cards'}
+                                            value={formData.ankiNew}
+                                            onChange={handleInputChange}
+                                        />
+                                        <Input
+                                            type="number"
+                                            name="ankiReviewed"
+                                            label="Reviewed Anki"
+                                            placeholder={'Reviewed Cards'}
+                                            value={formData.ankiReviewed}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                    <Input
+                                        type="number"
+                                        name="ankiLong"
+                                        label="How long?"
+                                        placeholder={'In Minutes'}
+                                        value={formData.ankiLong}
+                                        onChange={handleInputChange}
+                                    />
+                                </>
+                            )}
+                            {formData.modalValue === 'Vocabulary Test' && (
+                                <>
+                                    <Input
+                                        type="number"
+                                        name="vocabularyNew"
+                                        label="How Much?"
+                                        placeholder={'Total Vocabulary'}
+                                        value={formData.vocabularyNew}
+                                        onChange={handleInputChange}
+                                    />
+                                    <Input
+                                        type="date"
+                                        name="vocabularyWhen"
+                                        label="When?"
+                                        value={formData.vocabularyWhen}
+                                        onChange={handleInputChange}
+                                    />
+                                </>
+                            )}
+                            <Button onClick={handleSubmit} type="button" disabled={isLoading} text={'Submit'} />
+                        </Form>
+                    </Modal>
+                </>
+            )}
 
-        <Status>
-            <Swiper
-                modules={[Navigation, Autoplay, Pagination, A11y]}
-                navigation
-                loop={true}
-                autoplay={{
-                    delay: 2500,
-                    disableOnInteraction: false,
-                }}
-                spaceBetween={50}
-                pagination={{ clickable: true }}
-                breakpoints={{
-                    768: {
-                        slidesPerView: 2,
-                    },
-                    1168: {
-                        slidesPerView: 3,
-                    },
-                }}
-            >
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Your Streak</h5> <p>{streak}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Time</h5> <p>{totalTime}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Words Medias</h5> <p>{mediasWords}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Words Books</h5> <p>{booksWords}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Hours Book</h5> <p>{booksTotalTime}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Hours Youtube + Podcast</h5> <p>{totalTimeYTBPD}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Pages Books</h5> <p>{booksTotalPages}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Books</h5> <p>{books}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Talks</h5> <p>{talk}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Streak Talk</h5> <p>{talkStreak}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Total Time Talk</h5> <p>{talkTotalTime}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Average Talk</h5> <p>{talkAverage}</p>
-                    </Card>
-                </SwiperSlide>
-                <SwiperSlide>
-                    <Card>
-                        <h5>Your Longest Streak</h5> <p>{longestStreak}</p>
-                    </Card>
-                </SwiperSlide>
-            </Swiper>
-        </Status>
-
-            <Chart style={{display: 'flex', flexDirection: 'column', maxWidth: '90vw', margin: '40px auto'}}>
-                Your Heat Map
-                <HeatMap
-                    value={heatMap}
-                    weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
-                    rectSize={16}
-                    width={600}
-                    startDate={new Date('2024/01/01')}
-                    style={{ color: 'white' }}
-                    panelColors={{
-                        0: '#221e22',
-                        10: '#14532d',
-                        30: '#166534',
-                        40: '#166534',
-                        60: '#15803d',
-                        120: '#16a34a',
+            <Status>
+                <Swiper
+                    modules={[Navigation, Autoplay, Pagination, A11y]}
+                    navigation
+                    loop={true}
+                    autoplay={{
+                        delay: 2500,
+                        disableOnInteraction: false,
                     }}
-                    rectRender={(props, data) => {
-                        return (
-                            <ToolTipHeatMap
-                                placement="top"
-                                content={`Time ${data.date}: ${data.count || 0} minutes`}
-                            >
-                                <rect {...props} />
-                            </ToolTipHeatMap>
-                        );
-                    }}
-                />
-            </Chart>
-        <Charts>
-            <Chart>
-                <LineChart
-                    width={wsz}
-                    height={hsz}
-                    data={chartMonthHour}
-                    margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
+                    spaceBetween={50}
+                    pagination={{ clickable: true }}
+                    breakpoints={{
+                        768: {
+                            slidesPerView: 2,
+                        },
+                        1168: {
+                            slidesPerView: 3,
+                        },
                     }}
                 >
-                    <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
-                    <XAxis dataKey="monthYear" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                        type="monotone"
-                        dataKey="totalTime"
-                        name="Hours By Month"
-                        stroke="#8884d8"
-                        activeDot={{ r: 8 }}
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Your Streak</h5> <p>{streak}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Time</h5> <p>{totalTime}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Days of Immersion</h5> <p>{daysOfImmersion}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Words Medias</h5> <p>{mediasWords}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Words Books</h5> <p>{booksWords}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Hours Book</h5> <p>{booksTotalTime}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Hours Youtube + Podcast</h5> <p>{totalTimeYTBPD}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Pages Books</h5> <p>{booksTotalPages}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Books</h5> <p>{books}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Talks</h5> <p>{talk}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Streak Talk</h5> <p>{talkStreak}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Total Time Talk</h5> <p>{talkTotalTime}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Average Talk</h5> <p>{talkAverage}</p>
+                        </Card>
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <Card>
+                            <h5>Your Longest Streak</h5> <p>{longestStreak}</p>
+                        </Card>
+                    </SwiperSlide>
+                </Swiper>
+            </Status>
+
+            <Chart style={{ display: 'flex', flexDirection: 'row', maxWidth: '90vw', margin: '40px auto', justifyContent: 'space-around' }}>
+                <div style={{ width: 200, height: 200 }}>
+                    <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
+                    <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`}/>
+                </div>
+                <div>
+                    <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
+                    <HeatMap
+                        value={heatMap}
+                        weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
+                        rectSize={16}
+                        width={600}
+                        startDate={heatMapStartDate}
+                        style={{ color: 'white' }}
+                        legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
+                        rectProps={{
+                            rx: 5,
+                        }}
+                        panelColors={{
+                            0: '#221e22',
+                            10: '#14532d',
+                            30: '#166534',
+                            40: '#166534',
+                            60: '#15803d',
+                            120: '#16a34a',
+                        }}
+                        rectRender={(props, data) => {
+                            return (
+                                <ToolTipHeatMap
+                                    placement="top"
+                                    content={`Time ${data.date}: ${data.count || 0} minutes`}
+                                >
+                                    <rect {...props} />
+                                </ToolTipHeatMap>
+                            );
+                        }}
                     />
-                </LineChart>
+                </div>
             </Chart>
-                <Chart style={{flex: 1, height: '1'}}>
-                    <h1>W.I.P</h1>
-                </Chart>
-            {
+            <Charts>
                 <Chart>
+                    Hours By Month
                     <LineChart
                         width={wsz}
                         height={hsz}
-                        data={chartMonthCumulative}
+                        data={chartMonthHour}
                         margin={{
                             top: 5,
                             right: 30,
@@ -788,7 +790,7 @@ return (
                             bottom: 5,
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
+                        <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
                         <XAxis dataKey="monthYear" />
                         <YAxis />
                         <Tooltip />
@@ -796,20 +798,48 @@ return (
                         <Line
                             type="monotone"
                             dataKey="totalTime"
-                            name="Total Hours"
+                            name="Hours By Month"
                             stroke="#8884d8"
                             activeDot={{ r: 8 }}
                         />
                     </LineChart>
                 </Chart>
-            }
-        </Charts>
+                {
+                    <Chart>
+                        Total Hours
+                        <LineChart
+                            width={wsz}
+                            height={hsz}
+                            data={chartMonthCumulative}
+                            margin={{
+                                top: 5,
+                                right: 30,
+                                left: 20,
+                                bottom: 5,
+                            }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="monthYear" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line
+                                type="monotone"
+                                dataKey="totalTime"
+                                name="Total Hours"
+                                stroke="#8884d8"
+                                activeDot={{ r: 8 }}
+                            />
+                        </LineChart>
+                    </Chart>
+                }
+            </Charts>
 
-        <Journey>
-            <Filter>
-                <h1>Your History</h1>
-                <div>
-                    <section>
+            <Journey>
+                <Filter>
+                    <h1>Your History</h1>
+                    <div>
+                        <section>
                             <p>Select What you want to see</p>
                             <select name="filterValue" onChange={(e) => setFilter(e.target.value)} value={filter}>
                                 <option value="All">All</option>
