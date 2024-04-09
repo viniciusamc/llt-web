@@ -32,7 +32,7 @@ export function Settings() {
 
     function handleSubmit() {
         setIsLoading(true)
-        api.patch('/v1/users', { wpm, averageWordsPage: awp, TL: language }).then((response) => {
+        api.patch('/v1/users', { wpm, averageWordsPage: awp, TL: language, dailyGoal: daily }).then((response) => {
             setSuccessMessage('Settings Saved with Success');
             refresh()
             clearMessage();
