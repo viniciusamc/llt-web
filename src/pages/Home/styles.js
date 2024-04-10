@@ -186,6 +186,7 @@ export const Chart = styled.section`
     > div {
         display: flex;
         flex-direction: column;
+        align-items: center;
     }
 `;
 

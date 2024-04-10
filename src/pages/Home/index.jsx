@@ -58,6 +58,9 @@ export function Home() {
         ankiReviewed: '',
         ankiLong: '',
         readHow: '',
+        bookHow: 'Active',
+        bookNewTitle: '',
+        bookNewPages: '',
         vocabularyNew: '',
         vocabularyWhen: '',
     };
@@ -82,8 +85,8 @@ export function Home() {
     const [streak, setStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
     const [daysOfImmersion, setDaysOfImmersion] = useState(0);
-    const [dailyGoal, setDailyGoal] = useState(0)
-    const [dailyGoalDid, setDailyGoalDid] = useState(0)
+    const [dailyGoal, setDailyGoal] = useState(0);
+    const [dailyGoalDid, setDailyGoalDid] = useState(0);
 
     const [vocabularyAverage, setVocabularyAverage] = useState(0);
     const [vocabulary, setVocabulary] = useState(0);
@@ -94,6 +97,12 @@ export function Home() {
     const [booksTotalPages, setBooksTotalPages] = useState(0);
     const [booksTotalTime, setBooksTotalTime] = useState('00:00:00');
     const [books, setBooks] = useState(0);
+    const [bookList, setBookList] = useState([]);
+    const [booksHistory, setBooksHistory] = useState([]);
+
+    const [currentBook, setCurrentBook] = useState('new');
+    const [bookPages, setBookPages] = useState(0);
+    const [editBook, setEditBook] = useState([]);
 
     const [talkTotalTime, setTalkTotalTime] = useState('00:00:00');
     const [talkStreak, setTalkStreak] = useState(0);
@@ -116,7 +125,13 @@ export function Home() {
 
     async function getInfoUser() {
         axios
-            .all([api.get('/v1/users/user'), api.get('/v1/vocabulary'), api.get('/v1/books'), api.get('/v1/talk'), api.get('/v1/users')])
+            .all([
+                api.get('/v1/users/user'),
+                api.get('/v1/vocabulary'),
+                api.get('/v1/books'),
+                api.get('/v1/talk'),
+                api.get('/v1/users'),
+            ])
             .then(
                 axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs) => {
                     const response = userResponse;
@@ -124,6 +139,8 @@ export function Home() {
                     const vocabulary = vocabularyResponse;
                     const books = booksResponse;
                     const talk = talkResponse;
+
+                    setBookList(books.data.books);
 
                     setTotalTime(response.data.totalTime);
                     setStreak(response.data.streak.currentStreak);
@@ -139,6 +156,7 @@ export function Home() {
                     setBooksTotalPages(books.data.totalBooksPages);
                     setBooksTotalTime(books.data.totalTimeBooks);
                     setBooks(books.data.books.length);
+                    setBooksHistory(books.data.booksLastHistory);
 
                     setTalk(talk.data.output.length);
                     setTalkTotalTime(talk.data.outputTotalTime);
@@ -153,11 +171,15 @@ export function Home() {
                     const heatMapStart = new Date(response.data.heatMap[0].date);
                     setHeatMapStartdate(heatMapStart);
                     setHeatMap(response.data.heatMap);
-                    
+
                     const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-                    const todayGoal = response.data.heatMap.filter(entry => entry.date === today);
-                    setDailyGoal(user.data.configs.dailyGoal)
-                    setDailyGoalDid(todayGoal[0].count)
+                    const todayGoal = response.data.heatMap.filter((entry) => entry.date === today);
+                    setDailyGoal(user.data.configs.dailyGoal);
+                    if (todayGoal && todayGoal.length > 0) {
+                        setDailyGoalDid(todayGoal[0].count || 0);
+                    } else {
+                        setDailyGoalDid(0);
+                    }
                     setChartMonthHour(response.data.hoursByMonth.reverse());
                     const cumulativeHours = [];
                     let cumulativeSum = 0;
@@ -317,6 +339,67 @@ export function Home() {
         }
 
         if (modalValue == 'Read') {
+            if (currentBook == 'new') {
+                setIsLoading(false);
+
+                const data = {
+                    title: formData.bookNewTitle,
+                    pages: formData.bookNewPages,
+                };
+
+                if (!data.title || !data.pages) {
+                    setErrorMessage('All The fields are required');
+                    clearMessage();
+                    return;
+                }
+
+                if (data.pages >= 20000) {
+                    setErrorMessage('Books Maximum Pages is 20000 pages');
+                    clearMessage();
+                    return;
+                }
+
+                api.post('/v1/books', data)
+                    .then((response) => {
+                        setSuccessMessage('Book created with success');
+                        setIsLoading(false);
+                        clearMessage();
+                    })
+                    .catch((e) => {
+                        setErrorMessage('Was not possible to create a book, try again later');
+                        setIsLoading(false);
+                        clearMessage();
+                    });
+            } else {
+                const data = {
+                    read_type: formData.bookHow,
+                    read_pages: Number(bookPages),
+                };
+
+                if (!data.read_pages || !data.read_type) {
+                    setErrorMessage('All The fields are required');
+                    clearMessage();
+                    return;
+                }
+
+                if (data.read_pages >= 20000) {
+                    setErrorMessage('Books Maximum Pages is 20000 pages');
+                    clearMessage();
+                    return;
+                }
+
+                api.patch(`/v1/books/${editBook}`, data)
+                    .then((response) => {
+                        setSuccessMessage('Book Updated with success');
+                        setIsLoading(false);
+                        clearMessage();
+                    })
+                    .catch((e) => {
+                        setErrorMessage(e.response.data.message);
+                        setIsLoading(false);
+                        clearMessage();
+                    });
+            }
         }
 
         if (modalValue == 'Vocabulary Test') {
@@ -441,6 +524,17 @@ export function Home() {
 
         setUsername(userName);
     }, []);
+
+    function updateBookPages(selected) {
+        const selectedBook = bookList.filter((book) => {
+            return book.title == selected;
+        });
+        if (selectedBook) {
+            const history = booksHistory.filter((book) => book.id_book === selectedBook[0].id);
+            setEditBook(history[0].id_book);
+            setBookPages(history[0].actual_page);
+        }
+    }
 
     function clearMessage(time) {
         setTimeout(
@@ -609,6 +703,69 @@ export function Home() {
                                     />
                                 </>
                             )}
+                            {formData.modalValue === 'Read' && (
+                                <>
+                                    <div>
+                                        <label>Select The book</label>
+                                        <select
+                                            onChange={(e) => {
+                                                setCurrentBook(e.target.value);
+                                                updateBookPages(e.target.value);
+                                            }}
+                                            value={currentBook}
+                                        >
+                                            <option value="new"> Create a New Book </option>
+                                            {bookList.map((item, index) => (
+                                                <option key={index} value={item.title}>
+                                                    {item.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {currentBook !== 'new' && (
+                                        <>
+                                            <div>
+                                                <label>How?</label>
+                                                <select
+                                                    name="bookHow"
+                                                    onChange={handleInputChange}
+                                                    value={formData.bookHow}
+                                                >
+                                                    <option value="Active">Active</option>
+                                                    <option value="Passive">Passive</option>
+                                                </select>
+                                            </div>
+                                            <Input
+                                                type={'number'}
+                                                label={'What is your current page?'}
+                                                placeholder={'Only Numbers'}
+                                                onChange={(e) => setBookPages(e.target.value)}
+                                                value={bookPages}
+                                            />
+                                        </>
+                                    )}
+                                    {currentBook == 'new' && (
+                                        <>
+                                            <Input
+                                                type={'text'}
+                                                label={'What is the book?'}
+                                                placeholder={'Title'}
+                                                name={'bookNewTitle'}
+                                                onChange={handleInputChange}
+                                                value={formData.bookNewTitle}
+                                            />
+                                            <Input
+                                                type={'number'}
+                                                label={'How much pages?'}
+                                                placeholder={'in numbers'}
+                                                name={'bookNewPages'}
+                                                onChange={handleInputChange}
+                                                value={formData.bookNewPages}
+                                            />
+                                        </>
+                                    )}
+                                </>
+                            )}
                             {formData.modalValue === 'Vocabulary Test' && (
                                 <>
                                     <Input
@@ -676,12 +833,12 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
+                            <h5>Total Words Medias</h5> <p>{mediasWords}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Words Medias</h5> <p>{mediasWords}</p>
+                            <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -737,10 +894,18 @@ export function Home() {
                 </Swiper>
             </Status>
 
-            <Chart style={{ display: 'flex', flexDirection: 'row', maxWidth: '90vw', margin: '40px auto', justifyContent: 'space-around' }}>
+            <Chart
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    maxWidth: '90vw',
+                    margin: '40px auto',
+                    justifyContent: 'space-around',
+                }}
+            >
                 <div style={{ width: 200, height: 200 }}>
                     <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
-                    <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`}/>
+                    <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
                 </div>
                 <div>
                     <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
@@ -748,8 +913,8 @@ export function Home() {
                         value={heatMap}
                         weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
                         rectSize={16}
-                        width={600}
                         startDate={heatMapStartDate}
+                        endDate={new Date()}
                         style={{ color: 'white' }}
                         legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
                         rectProps={{
@@ -777,35 +942,35 @@ export function Home() {
                 </div>
             </Chart>
             <Charts>
-                <Chart>
-                    Hours By Month
-                    <LineChart
-                        width={wsz}
-                        height={hsz}
-                        data={chartMonthHour}
-                        margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
-                        <XAxis dataKey="monthYear" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="totalTime"
-                            name="Hours By Month"
-                            stroke="#8884d8"
-                            activeDot={{ r: 8 }}
-                        />
-                    </LineChart>
-                </Chart>
-                {
-                    <Chart>
+                <Chart style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
+                    <div>
+                        Hours By Month
+                        <LineChart
+                            width={wsz}
+                            height={hsz}
+                            data={chartMonthHour}
+                            margin={{
+                                top: 5,
+                                right: 30,
+                                left: 20,
+                                bottom: 5,
+                            }}
+                        >
+                            <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
+                            <XAxis dataKey="monthYear" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line
+                                type="monotone"
+                                dataKey="totalTime"
+                                name="Hours By Month"
+                                stroke="#8884d8"
+                                activeDot={{ r: 8 }}
+                            />
+                        </LineChart>
+                    </div>
+                    <div>
                         Total Hours
                         <LineChart
                             width={wsz}
@@ -831,8 +996,8 @@ export function Home() {
                                 activeDot={{ r: 8 }}
                             />
                         </LineChart>
-                    </Chart>
-                }
+                    </div>
+                </Chart>
             </Charts>
 
             <Journey>
