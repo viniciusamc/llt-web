@@ -82,7 +82,7 @@ export const Top = styled.div`
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #fff;
-    color: ${({theme}) => theme.COLORS.WHITE};
+    color: ${({ theme }) => theme.COLORS.WHITE};
 
     > label {
         font-size: 1.5rem;
@@ -167,26 +167,35 @@ export const Charts = styled.section`
     margin: 40px auto 0;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex: 1;
     justify-content: center;
-    gap: 28px;
+
+    @media (max-width: 930px) {
+        flex-direction: column;
+        gap: 28px;
+    }
 `;
 
 export const Chart = styled.section`
     padding: 40px;
     background-color: ${({ theme }) => theme.COLORS.MAIN};
-    border-radius: 8px;
 
     display: flex;
     flex-direction: column;
+    flex: 1;
     justify-content: center;
     align-items: center;
-    color: ${({theme}) => theme.COLORS.WHITE};
+    color: ${({ theme }) => theme.COLORS.WHITE};
 
     > div {
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+
+    @media (max-width: 930px) {
+        border-radius: 8px !important;
     }
 `;
 
@@ -229,7 +238,6 @@ export const Filter = styled.div`
 
     > div {
         display: flex;
-        align-items: center;
         gap: 24px;
     }
 
@@ -268,6 +276,12 @@ export const Filter = styled.div`
         .react-calendar__tile--hover {
             background: ${({ theme }) => theme.COLORS.PRIMARY};
             color: #fff;
+        }
+    }
+
+    @media (max-width: 600px) {
+        > div {
+            flex-direction: column;
         }
     }
 `;

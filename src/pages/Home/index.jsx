@@ -894,55 +894,66 @@ export function Home() {
                 </Swiper>
             </Status>
 
-            <Chart
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    maxWidth: '90vw',
-                    margin: '40px auto',
-                    justifyContent: 'space-around',
-                }}
-            >
-                <div style={{ width: 200, height: 200 }}>
-                    <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
-                    <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
-                </div>
-                <div>
-                    <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
-                    <HeatMap
-                        value={heatMap}
-                        weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
-                        rectSize={16}
-                        startDate={heatMapStartDate}
-                        endDate={new Date()}
-                        style={{ color: 'white' }}
-                        legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
-                        rectProps={{
-                            rx: 5,
-                        }}
-                        panelColors={{
-                            0: '#221e22',
-                            10: '#14532d',
-                            30: '#166534',
-                            40: '#166534',
-                            60: '#15803d',
-                            120: '#16a34a',
-                        }}
-                        rectRender={(props, data) => {
-                            return (
-                                <ToolTipHeatMap
-                                    placement="top"
-                                    content={`Time ${data.date}: ${data.count || 0} minutes`}
-                                >
-                                    <rect {...props} />
-                                </ToolTipHeatMap>
-                            );
-                        }}
-                    />
-                </div>
-            </Chart>
             <Charts>
-                <Chart style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
+                <Chart
+                    style={{
+                        borderTopLeftRadius: 8,
+                        borderBottomLeftRadius: 8,
+                    }}
+                >
+                    <div style={{ width: 200, height: 200 }}>
+                        <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
+                        <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
+                    </div>
+                </Chart>
+                <Chart
+                    style={{
+                        borderTopRightRadius: 8,
+                        borderBottomRightRadius: 8,
+                    }}
+                >
+                    <div>
+                        <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
+                        <HeatMap
+                            value={heatMap}
+                            weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
+                            rectSize={16}
+                            startDate={heatMapStartDate}
+                            endDate={new Date()}
+                            style={{ color: 'white' }}
+                            legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
+                            rectProps={{
+                                rx: 5,
+                            }}
+                            panelColors={{
+                                0: '#221e22',
+                                10: '#14532d',
+                                30: '#166534',
+                                40: '#166534',
+                                60: '#15803d',
+                                120: '#16a34a',
+                            }}
+                            rectRender={(props, data) => {
+                                return (
+                                    <ToolTipHeatMap
+                                        placement="top"
+                                        content={`Time ${data.date}: ${data.count || 0} minutes`}
+                                    >
+                                        <rect {...props} />
+                                    </ToolTipHeatMap>
+                                );
+                            }}
+                        />
+                    </div>
+                </Chart>
+            </Charts>
+            <Charts>
+                <Chart
+                    style={{
+                        borderTopLeftRadius: 8,
+                        borderBottomLeftRadius: 8,
+                    }}
+                >
                     <div>
                         Hours By Month
                         <LineChart
@@ -970,6 +981,13 @@ export function Home() {
                             />
                         </LineChart>
                     </div>
+                </Chart>
+                <Chart
+                    style={{
+                        borderTopRightRadius: 8,
+                        borderBottomRightRadius: 8,
+                    }}
+                >
                     <div>
                         Total Hours
                         <LineChart
@@ -1040,8 +1058,8 @@ export function Home() {
                     breakLabel="..."
                     nextLabel=">"
                     onPageChange={handlePageClick}
-                    pageRangeDisplayed={5}
-                    pageCount={Math.ceil(listJourney.length / itemsPerPage)} // Calculate total pages
+                    pageRangeDisplayed={3}
+                    pageCount={Math.ceil(listJourney.length / itemsPerPage)}
                     previousLabel="<"
                     renderOnZeroPageCount={null}
                 />
