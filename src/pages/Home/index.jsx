@@ -963,14 +963,7 @@ export function Home() {
                             width={wsz}
                             height={hsz}
                             data={chartMonthHour}
-                            margin={{
-                                top: 5,
-                                right: 30,
-                                left: 20,
-                                bottom: 5,
-                            }}
                         >
-                            <CartesianGrid strokeDasharray="5 5" stroke="#eee" />
                             <XAxis dataKey="monthYear" />
                             <YAxis />
                             <Tooltip />
@@ -980,7 +973,6 @@ export function Home() {
                                 dataKey="totalTime"
                                 name="Hours By Month"
                                 stroke="#8884d8"
-                                activeDot={{ r: 8 }}
                             />
                         </LineChart>
                     </div>
@@ -997,15 +989,8 @@ export function Home() {
                             width={wsz}
                             height={hsz}
                             data={chartMonthCumulative}
-                            margin={{
-                                top: 5,
-                                right: 30,
-                                left: 20,
-                                bottom: 5,
-                            }}
                         >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="monthYear" />
+                            <XAxis dataKey="monthYear" scale={'point'}/>
                             <YAxis />
                             <Tooltip />
                             <Legend />
@@ -1014,7 +999,6 @@ export function Home() {
                                 dataKey="totalTime"
                                 name="Total Hours"
                                 stroke="#8884d8"
-                                activeDot={{ r: 8 }}
                             />
                         </LineChart>
                     </div>
