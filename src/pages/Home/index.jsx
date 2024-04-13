@@ -147,7 +147,10 @@ export function Home() {
                     setLongestStreak(response.data.streak.longestStreak);
 
                     setVocabularyAverage(vocabulary.data.average);
-                    setVocabulary(vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary);
+                    const totalVocabulary = vocabulary.data.vocabulary.length
+                        ? vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary || 0
+                        : 0;
+                    setVocabulary(totalVocabulary);
 
                     setMediasWords(response.data.totalWordsMedia);
                     setTotalTitmeYTBPD(response.data.mediasTotalTime);
@@ -1059,7 +1062,7 @@ export function Home() {
                     nextLabel=">"
                     onPageChange={handlePageClick}
                     pageRangeDisplayed={3}
-                    pageCount={Math.ceil(listJourney.length / itemsPerPage)}
+                    pageCount={Math.floor(listJourney.length / itemsPerPage)}
                     previousLabel="<"
                     renderOnZeroPageCount={null}
                 />
