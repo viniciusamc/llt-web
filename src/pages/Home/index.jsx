@@ -40,6 +40,9 @@ import { Footer } from '../../components/Footer/index.jsx';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
+import useWindowSize from 'react-use/lib/useWindowSize';
+import Confetti from 'react-confetti';
+
 const wsz = 320;
 const hsz = 320;
 
@@ -75,6 +78,9 @@ export function Home() {
     const [successMessage, setSuccessMessage] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+
+    const { width, height } = useWindowSize();
+    const [confetti, setConfetti] = useState(false);
 
     const [chartMonthHour, setChartMonthHour] = useState([]);
     const [heatMap, setHeatMap] = useState([]);
@@ -182,6 +188,10 @@ export function Home() {
                         setDailyGoalDid(todayGoal[0].count || 0);
                     } else {
                         setDailyGoalDid(0);
+                    }
+
+                    if (todayGoal[0].count >= user.data.configs.dailyGoal) {
+                        setConfetti(true);
                     }
                     setChartMonthHour(response.data.hoursByMonth.reverse());
                     const cumulativeHours = [];
@@ -574,6 +584,16 @@ export function Home() {
     return (
         <>
             <Header />
+            {confetti && (
+                <Confetti
+                    width={width}
+                    height={height}
+                    recycle={false}
+                    numberOfPieces={800}
+                    tweenDuration={15000}
+                    style={{ zIndex: '10000' }}
+                />
+            )}
             <CreateSection onClick={() => handleModal()}>
                 <h4>Hello, update your records</h4>
                 <button>
@@ -959,21 +979,12 @@ export function Home() {
                 >
                     <div>
                         Hours By Month
-                        <LineChart
-                            width={wsz}
-                            height={hsz}
-                            data={chartMonthHour}
-                        >
+                        <LineChart width={wsz} height={hsz} data={chartMonthHour}>
                             <XAxis dataKey="monthYear" />
                             <YAxis />
                             <Tooltip />
                             <Legend />
-                            <Line
-                                type="monotone"
-                                dataKey="totalTime"
-                                name="Hours By Month"
-                                stroke="#8884d8"
-                            />
+                            <Line type="monotone" dataKey="totalTime" name="Hours By Month" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
@@ -985,21 +996,12 @@ export function Home() {
                 >
                     <div>
                         Total Hours
-                        <LineChart
-                            width={wsz}
-                            height={hsz}
-                            data={chartMonthCumulative}
-                        >
-                            <XAxis dataKey="monthYear" scale={'point'}/>
+                        <LineChart width={wsz} height={hsz} data={chartMonthCumulative}>
+                            <XAxis dataKey="monthYear" scale={'point'} />
                             <YAxis />
                             <Tooltip />
                             <Legend />
-                            <Line
-                                type="monotone"
-                                dataKey="totalTime"
-                                name="Total Hours"
-                                stroke="#8884d8"
-                            />
+                            <Line type="monotone" dataKey="totalTime" name="Total Hours" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
