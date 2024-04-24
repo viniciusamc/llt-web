@@ -207,6 +207,7 @@ export function Home() {
                     });
 
                     setDailyRegister(dailyRegister);
+                    console.log(dailyRegister)
 
                     for (let i = 0; i < response.data.hoursByMonth.length; i++) {
                         const currentMonthYear = response.data.hoursByMonth[i].monthYear;
