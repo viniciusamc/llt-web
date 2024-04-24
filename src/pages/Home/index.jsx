@@ -47,6 +47,7 @@ const wsz = 320;
 const hsz = 320;
 
 export function Home() {
+    const userLocale = navigator.language;
     const initialFormData = {
         modalValue: 'Youtube',
         youtubeHow: 'Active',
@@ -198,7 +199,7 @@ export function Home() {
                     const cumulativeHours = [];
                     let cumulativeSum = 0;
 
-                    const dailyRegister = response.data.heatMap.filter((item) => {
+                    const dailyRegisterDate = response.data.heatMap.filter((item) => {
                         const itemDate = dayjs(item.date);
                         const startOfCurrentMonth = dayjs().startOf('month');
                         const endOfCurrentMonth = dayjs().endOf('month');
@@ -206,8 +207,7 @@ export function Home() {
                         return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
                     });
 
-                    setDailyRegister(dailyRegister);
-                    console.log(dailyRegister)
+                    setDailyRegister(dailyRegisterDate);
 
                     for (let i = 0; i < response.data.hoursByMonth.length; i++) {
                         const currentMonthYear = response.data.hoursByMonth[i].monthYear;
@@ -989,11 +989,16 @@ export function Home() {
                         <XAxis
                             dataKey="date"
                             tickFormatter={(date) =>
-                                new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+                                new Date(date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
                             }
                         />
                         <YAxis />
-                        <Tooltip />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#252525' }}
+                            labelFormatter={(value) => {
+                                return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                            }}
+                        />
                         <Legend />
                         <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
                     </BarChart>
@@ -1011,7 +1016,17 @@ export function Home() {
                         <LineChart width={wsz} height={hsz} data={chartMonthHour}>
                             <XAxis dataKey="monthYear" />
                             <YAxis />
-                            <Tooltip />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#252525' }}
+                                labelFormatter={(value) => {
+                                    const [month, year] = value.split('/');
+                                    const date = new Date(`${year}-${month}-01`);
+                                    return date.toLocaleDateString(userLocale, {
+                                        month: 'long',
+                                        year: 'numeric',
+                                    });
+                                }}
+                            />
                             <Legend />
                             <Line type="monotone" dataKey="totalTime" name="Hours By Month" stroke="#8884d8" />
                         </LineChart>
@@ -1028,7 +1043,17 @@ export function Home() {
                         <LineChart width={wsz} height={hsz} data={chartMonthCumulative}>
                             <XAxis dataKey="monthYear" scale={'point'} />
                             <YAxis />
-                            <Tooltip />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#252525' }}
+                                labelFormatter={(value) => {
+                                    const [month, year] = value.split('/');
+                                    const date = new Date(`${year}-${month}-01`);
+                                    return date.toLocaleDateString(userLocale, {
+                                        month: 'long',
+                                        year: 'numeric',
+                                    });
+                                }}
+                            />
                             <Legend />
                             <Line type="monotone" dataKey="totalTime" name="Total Hours" stroke="#8884d8" />
                         </LineChart>
