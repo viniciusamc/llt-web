@@ -22,7 +22,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
 import { useState, useEffect } from 'react';
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import { CartesianGrid, BarChart, Line, Bar, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
 import HeatMap from '@uiw/react-heat-map';
 import ToolTipHeatMap from '@uiw/react-tooltip';
 
@@ -84,6 +84,7 @@ export function Home() {
 
     const [chartMonthHour, setChartMonthHour] = useState([]);
     const [heatMap, setHeatMap] = useState([]);
+    const [dailyRegister, setDailyRegister] = useState([]);
     const [heatMapStartDate, setHeatMapStartdate] = useState(new Date(2023));
     const [chartMonthCumulative, setChartMonthCumulative] = useState([]);
 
@@ -190,12 +191,22 @@ export function Home() {
                         setDailyGoalDid(0);
                     }
 
-                    if (todayGoal[0].count >= user.data.configs.dailyGoal) {
+                    if (dailyGoalDid >= user.data.configs.dailyGoal) {
                         setConfetti(true);
                     }
                     setChartMonthHour(response.data.hoursByMonth.reverse());
                     const cumulativeHours = [];
                     let cumulativeSum = 0;
+
+                    const dailyRegister = response.data.heatMap.filter((item) => {
+                        const itemDate = dayjs(item.date);
+                        const startOfCurrentMonth = dayjs().startOf('month');
+                        const endOfCurrentMonth = dayjs().endOf('month');
+
+                        return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+                    });
+
+                    setDailyRegister(dailyRegister);
 
                     for (let i = 0; i < response.data.hoursByMonth.length; i++) {
                         const currentMonthYear = response.data.hoursByMonth[i].monthYear;
@@ -968,6 +979,23 @@ export function Home() {
                             }}
                         />
                     </div>
+                </Chart>
+            </Charts>
+            <Charts>
+                <Chart>
+                    <BarChart width={1000} height={250} data={dailyRegister}>
+                        <CartesianGrid strokeDasharray="1 1" />
+                        <XAxis
+                            dataKey="date"
+                            tickFormatter={(date) =>
+                                new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+                            }
+                        />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
+                    </BarChart>
                 </Chart>
             </Charts>
             <Charts>
