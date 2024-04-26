@@ -22,7 +22,18 @@ import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
 import { useState, useEffect } from 'react';
-import { CartesianGrid, BarChart, Line, Bar, LineChart, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import {
+    CartesianGrid,
+    BarChart,
+    Line,
+    Bar,
+    LineChart,
+    Tooltip,
+    XAxis,
+    YAxis,
+    Legend,
+    ResponsiveContainer,
+} from 'recharts';
 import HeatMap from '@uiw/react-heat-map';
 import ToolTipHeatMap from '@uiw/react-tooltip';
 
@@ -206,6 +217,8 @@ export function Home() {
 
                         return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
                     });
+
+                    dailyRegisterDate.pop(); // the function above is creating 'tomorrow'
 
                     setDailyRegister(dailyRegisterDate);
 
@@ -961,6 +974,7 @@ export function Home() {
                                 rx: 5,
                             }}
                             panelColors={{
+                                0: '#222222',
                                 1: '#221e22',
                                 10: '#14532d',
                                 30: '#166534',
@@ -983,25 +997,39 @@ export function Home() {
                 </Chart>
             </Charts>
             <Charts>
-                <Chart>
-                    <BarChart width={1000} height={250} data={dailyRegister}>
-                        <CartesianGrid strokeDasharray="1 1" />
-                        <XAxis
-                            dataKey="date"
-                            tickFormatter={(date) =>
-                                new Date(date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
-                            }
-                        />
-                        <YAxis />
-                        <Tooltip
-                            contentStyle={{ backgroundColor: '#252525' }}
-                            labelFormatter={(value) => {
-                                return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                <Chart style={{ overflowX: 'scroll' }}>
+                    <div style={{ width: '800px', minHeight: '300px' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                height: '100%',
                             }}
-                        />
-                        <Legend />
-                        <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
-                    </BarChart>
+                        >
+                            <ResponsiveContainer>
+                                <BarChart data={dailyRegister}>
+                                    <CartesianGrid strokeDasharray="1 1" />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={(date) =>
+                                            new Date(date).toLocaleDateString('en-US', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                            })
+                                        }
+                                    />
+                                    <YAxis />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#252525' }}
+                                        labelFormatter={(value) => {
+                                            return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                                        }}
+                                    />
+                                    <Legend />
+                                    <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
                 </Chart>
             </Charts>
             <Charts>
