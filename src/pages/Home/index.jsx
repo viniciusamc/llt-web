@@ -261,8 +261,6 @@ export function Home() {
             return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
         });
 
-        dailyRegisterDate.pop(); // the function above is creating 'tomorrow'
-
         setDailyRegister(dailyRegisterDate)
     }
 
