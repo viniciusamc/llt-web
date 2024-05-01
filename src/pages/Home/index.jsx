@@ -54,6 +54,8 @@ import 'react-circular-progressbar/dist/styles.css';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import Confetti from 'react-confetti';
 
+import { MonthPicker, MonthInput } from 'react-lite-month-picker';
+
 const wsz = 320;
 const hsz = 320;
 
@@ -142,6 +144,12 @@ export function Home() {
     const [listJourney, setListJourney] = useState([]);
     const [listJourneyWithoutFilter, setListJourneyWithoutFilter] = useState([]);
 
+    const [isPickerOpen, setIsPickerOpen] = useState(false)
+    const [selectedMonthData, setSelectedMonthData] = useState({
+        month: dayjs().month() + 1,
+        year: dayjs().year(),
+    })
+
     async function getInfoUser() {
         axios
             .all([
@@ -213,7 +221,7 @@ export function Home() {
                     const dailyRegisterDate = response.data.heatMap.filter((item) => {
                         const itemDate = dayjs(item.date);
                         const startOfCurrentMonth = dayjs().startOf('month');
-                        const endOfCurrentMonth = dayjs().endOf('month');
+                        const endOfCurrentMonth = dayjs().endOf('month')
 
                         return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
                     });
@@ -243,6 +251,21 @@ export function Home() {
                 console.error('Error:', error);
             });
     }
+
+    function handleDailyRegister() {
+        const dailyRegisterDate = heatMap.filter((item) => {
+            const itemDate = dayjs(item.date);
+            const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
+            const endOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).endOf('month')
+
+            return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+        });
+
+        dailyRegisterDate.pop(); // the function above is creating 'tomorrow'
+
+        setDailyRegister(dailyRegisterDate)
+    }
+
     function handleSubmit(e) {
         e.preventDefault();
 
@@ -997,39 +1020,56 @@ export function Home() {
                 </Chart>
             </Charts>
             <Charts>
-                <Chart style={{ overflowX: 'scroll' }}>
-                    <div style={{ width: '800px', minHeight: '300px' }}>
+                <Chart style={{ overflowX: 'auto', display: 'flex', alignItems: 'center' }}>
+                    <MonthInput
+                        selected={selectedMonthData}
+                        setShowMonthPicker={setIsPickerOpen}
+                        showMonthPicker={isPickerOpen}
+                        bgColor={"#221E22"}
+                        bgColorHover={"#000"}
+                        textColor={"#fff"}
+                        size={"small"}
+                    />
+                    {isPickerOpen ? (
                         <div
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                            }}
+                            style={{ zIndex: '100000', width: '100%' }}
                         >
-                            <ResponsiveContainer>
-                                <BarChart data={dailyRegister}>
-                                    <CartesianGrid strokeDasharray="1 1" />
-                                    <XAxis
-                                        dataKey="date"
-                                        tickFormatter={(date) =>
-                                            new Date(date).toLocaleDateString('en-US', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                            })
-                                        }
-                                    />
-                                    <YAxis />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#252525' }}
-                                        labelFormatter={(value) => {
-                                            return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
-                                        }}
-                                    />
-                                    <Legend />
-                                    <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <MonthPicker
+                                setIsOpen={setIsPickerOpen}
+                                selected={selectedMonthData}
+                                onChange={(e) => {
+                                    setSelectedMonthData(e);
+                                    handleDailyRegister();
+                                }}
+                                size={"small"}
+                                bgColorMonthActive={"#000"}
+                                bgColorPicker={"#221E22"}
+                                bgColorMonthHover={"#000"}
+                                textColor={"#fff"}
+                            />
                         </div>
-                    </div>
+                    ) : null}
+                    <BarChart width={800} height={hsz} data={dailyRegister}>
+                        <CartesianGrid strokeDasharray="1 1" />
+                        <XAxis
+                            dataKey="date"
+                            tickFormatter={(date) =>
+                                new Date(date).toLocaleDateString('en-US', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                })
+                            }
+                        />
+                        <YAxis />
+                        <Tooltip
+                            contentStyle={{ backgroundColor: '#252525' }}
+                            labelFormatter={(value) => {
+                                return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
+                            }}
+                        />
+                        <Legend />
+                        <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
+                    </BarChart>
                 </Chart>
             </Charts>
             <Charts>

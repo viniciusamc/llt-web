@@ -65,6 +65,9 @@ dependencies:
   react-icons:
     specifier: ^5.1.0
     version: 5.1.0(react@18.2.0)
+  react-lite-month-picker:
+    specifier: ^1.2.18
+    version: 1.2.18(react@18.2.0)
   react-paginate:
     specifier: ^8.2.0
     version: 8.2.0(react@18.2.0)
@@ -3465,6 +3468,14 @@ packages:
       react: 0.14 || 15 - 18
     dependencies:
       prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
+  /react-lite-month-picker@1.2.18(react@18.2.0):
+    resolution: {integrity: sha512-Gyn77vHm0leb88EOCml7cRj7cp3gmY0tDQazbpgm/bcY6C0gB9xZHjRbX3BxdfxLYnSff24ecz5xANa5hpO4aQ==}
+    peerDependencies:
+      react: ^18.2.0
+    dependencies:
       react: 18.2.0
     dev: false
 
