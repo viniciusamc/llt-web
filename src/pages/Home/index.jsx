@@ -149,6 +149,7 @@ export function Home() {
         month: dayjs().month() + 1,
         year: dayjs().year(),
     })
+    const [orderedList, setOrderedList] = useState([])
 
     async function getInfoUser() {
         axios
@@ -168,6 +169,7 @@ export function Home() {
                     const talk = talkResponse;
 
                     setBookList(books.data.books);
+                    setOrderedList(response)
 
                     setTotalTime(response.data.totalTime);
                     setStreak(response.data.streak.currentStreak);
@@ -218,17 +220,68 @@ export function Home() {
                     const cumulativeHours = [];
                     let cumulativeSum = 0;
 
-                    const dailyRegisterDate = response.data.heatMap.filter((item) => {
-                        const itemDate = dayjs(item.date);
+                    const dailyRegisterDate = response.data.ordered.filter((item) => {
+                        const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
+                        const itemDate = dayjs(itemDateFormatted)
                         const startOfCurrentMonth = dayjs().startOf('month');
-                        const endOfCurrentMonth = dayjs().endOf('month')
+                        const endOfCurrentMonth = dayjs().endOf('month');
 
                         return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
                     });
 
-                    dailyRegisterDate.pop(); // the function above is creating 'tomorrow'
+                    const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
 
-                    setDailyRegister(dailyRegisterDate);
+                    const dailyDetails = {};
+
+                    const firstDayOfMonth = dayjs().startOf('month');
+
+                    const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
+
+                    for (let i = 0; i < daysUntilToday; i++) {
+                        const currentDate = firstDayOfMonth.add(i, 'day');
+                        const formattedDate = currentDate.format('MM/DD/YYYY');
+                        dailyDetails[formattedDate] = {};
+                    }
+
+                    dailyRegisterDate.forEach(element => {
+                        const day = dayjs(element.created_at).format('MM/DD/YYYY');
+
+                        if (!dailyDetails[day]) {
+                            dailyDetails[day] = {};
+                        }
+
+                        if (!dailyDetails[day][element.source]) {
+                            dailyDetails[day][element.source] = {
+                                activity: [],
+                                totalMinutes: 0,
+                            };
+                        }
+
+                        dailyDetails[day][element.source].activity.push(element);
+
+                        const timeSplited = element.time.split(':');
+                        const hours = parseInt(timeSplited[0]);
+                        const minutes = parseInt(timeSplited[1]);
+                        const seconds = parseInt(timeSplited[2]);
+                        const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+
+                        dailyDetails[day][element.source].totalMinutes += totalMinutes;
+                    });
+
+
+                    const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
+                        date: key,
+                        minutes: dailyDetails[key],
+                    }));
+
+                    const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
+                        const date = dayjs(item.date).format('MM/DD/YYYY');
+                        const minutes = item.minutes;
+                        const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
+                        return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
+                    });
+
+                    setDailyRegister(dailyMinutesSeparated)
 
                     for (let i = 0; i < response.data.hoursByMonth.length; i++) {
                         const currentMonthYear = response.data.hoursByMonth[i].monthYear;
@@ -253,15 +306,68 @@ export function Home() {
     }
 
     function handleDailyRegister() {
-        const dailyRegisterDate = heatMap.filter((item) => {
-            const itemDate = dayjs(item.date);
+        const ordered = orderedList.data.ordered
+
+        const dailyRegisterDate = ordered.filter((item) => {
+            const itemDate = dayjs(item.created_at).format('MM/DD/YYYY');
+            const itemDateFormatted = dayjs(itemDate)
             const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
             const endOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).endOf('month')
 
-            return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+            return itemDateFormatted.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
         });
 
-        setDailyRegister(dailyRegisterDate)
+        const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
+
+        const dailyDetails = {};
+
+        const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
+
+        for (let i = 0; i < 30; i++) {
+            const currentDate = startOfCurrentMonth.add(i, 'day');
+            const formattedDate = currentDate.format('MM/DD/YYYY');
+            dailyDetails[formattedDate] = {};
+        }
+
+        dailyRegisterDate.forEach(element => {
+            const day = dayjs(element.created_at).format('MM/DD/YYYY');
+
+            if (!dailyDetails[day]) {
+                dailyDetails[day] = {};
+            }
+
+            if (!dailyDetails[day][element.source]) {
+                dailyDetails[day][element.source] = {
+                    activity: [],
+                    totalMinutes: 0,
+                };
+            }
+
+            dailyDetails[day][element.source].activity.push(element);
+
+            const timeSplited = element.time.split(':');
+            const hours = parseInt(timeSplited[0]);
+            const minutes = parseInt(timeSplited[1]);
+            const seconds = parseInt(timeSplited[2]);
+            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+
+            dailyDetails[day][element.source].totalMinutes += totalMinutes;
+        });
+
+
+        const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
+            date: key,
+            minutes: dailyDetails[key],
+        }));
+
+        const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
+            const date = item.date;
+            const minutes = item.minutes;
+            const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
+            return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
+        });
+
+        setDailyRegister(dailyMinutesSeparated)
     }
 
     function handleSubmit(e) {
@@ -1051,22 +1157,19 @@ export function Home() {
                         <CartesianGrid strokeDasharray="1 1" />
                         <XAxis
                             dataKey="date"
-                            tickFormatter={(date) =>
-                                new Date(date).toLocaleDateString('en-US', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                })
-                            }
                         />
-                        <YAxis />
+                        <YAxis label={{ value: 'Time (minutes)', angle: -90, position: 'insideLeft' }} />
                         <Tooltip
                             contentStyle={{ backgroundColor: '#252525' }}
-                            labelFormatter={(value) => {
-                                return `${new Date(value).toLocaleDateString(userLocale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
-                            }}
                         />
-                        <Legend />
-                        <Bar dataKey="count" fill="#8884d8" name={'Minutes'} />
+
+                        <Legend verticalAlign="top" height={36} />
+                        <Bar dataKey="Youtube" fill="#ff0000" name={'Youtube'} stackId={'a'} />
+                        <Bar dataKey="Podcast" fill="#709BA2" name={'Podcast'} stackId={'a'} />
+                        <Bar dataKey="books_history" fill="#FBDECF" name={'Books'} stackId={'a'} />
+                        <Bar dataKey="talk" fill="#872BF4" name={'Talks'} stackId={'a'} />
+                        <Bar dataKey="anki" fill="#0988DF" name={'Anki'} stackId={'a'} />
+
                     </BarChart>
                 </Chart>
             </Charts>
