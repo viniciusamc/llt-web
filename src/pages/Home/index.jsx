@@ -56,6 +56,7 @@ import Confetti from 'react-confetti';
 
 import { MonthPicker, MonthInput } from 'react-lite-month-picker';
 import MoonLoader from "react-spinners/MoonLoader";
+import iso6391 from 'iso-639-1';
 
 const wsz = 320;
 const hsz = 320;
@@ -81,6 +82,7 @@ export function Home() {
         bookNewPages: '',
         vocabularyNew: '',
         vocabularyWhen: '',
+        targetLanguage: '',
     };
 
     const instance = Axios.create();
@@ -152,6 +154,8 @@ export function Home() {
         year: dayjs().year(),
     })
     const [orderedList, setOrderedList] = useState([])
+    const [language, setLanguage] = useState([])
+    const [addNewLanguage, setAddNewLanguage] = useState()
 
     async function getInfoUser() {
         axios
@@ -172,6 +176,7 @@ export function Home() {
 
                     setBookList(books.data.books);
                     setOrderedList(response)
+                    setLanguage(response.data.usedLanguages)
 
                     setTotalTime(response.data.totalTime);
                     setStreak(response.data.streak.currentStreak);
@@ -386,6 +391,7 @@ export function Home() {
         e.preventDefault();
 
         const modalValue = formData.modalValue;
+        const targetLanguage = formData.targetLanguage
 
         if (modalValue == 'Youtube' || modalValue == 'Podcast') {
             setIsLoading(true);
@@ -394,6 +400,7 @@ export function Home() {
                 url: formData.youtubeUrl,
                 type: formData.modalValue,
                 watch_type: formData.youtubeHow,
+                target_language: targetLanguage,
             };
 
             if (!data.url || !data.watch_type) {
@@ -443,6 +450,7 @@ export function Home() {
                 reviewed: formData.ankiReviewed,
                 newCards: formData.ankiNew,
                 time: formData.ankiLong,
+                target_language: targetLanguage,
             };
 
             api.post('/v1/anki', data)
@@ -468,6 +476,7 @@ export function Home() {
                 title: formData.movieWhich,
                 watch_type: formData.movieHow,
                 type: formData.modalValue,
+                target_language: targetLanguage,
             };
 
             if (data.subtitles.type != 'application/x-subrip') {
@@ -501,6 +510,7 @@ export function Home() {
             const data = {
                 type: formData.talkHow,
                 time: Number(formData.talkLong),
+                target_language: targetLanguage,
             };
 
             if (!data.time || !Number.isInteger(data.time)) {
@@ -530,6 +540,7 @@ export function Home() {
                 const data = {
                     title: formData.bookNewTitle,
                     pages: formData.bookNewPages,
+                    target_language: targetLanguage,
                 };
 
                 if (!data.title || !data.pages) {
@@ -561,6 +572,7 @@ export function Home() {
                 const data = {
                     read_type: formData.bookHow,
                     read_pages: Number(bookPages),
+                    target_language: targetLanguage,
                 };
 
                 if (!data.read_pages || !data.read_type) {
@@ -597,6 +609,7 @@ export function Home() {
             const data = {
                 vocabulary: formData.vocabularyNew,
                 date: formData.vocabularyWhen,
+                target_language: targetLanguage,
             };
 
             api.post('/v1/vocabulary', data)
@@ -1009,6 +1022,32 @@ export function Home() {
                                     />
                                 </>
                             )}
+                            <div>
+                                <label>In which language? </label>
+                                <select name="targetLanguage" onChange={(event) => {
+                                    handleInputChange(event);
+                                    if (event.target.value === 'newLanguage') {
+                                        setAddNewLanguage(!addNewLanguage)
+                                    }
+                                }} value={formData.targetLanguage}>
+                                    {language.map((item, index) => {
+                                        return (
+                                            <option value={item.code} key={index}>{item.languageName}</option>
+                                        )
+                                    })}
+                                    <option value={'newLanguage'}>Add a new Language</option>
+                                    <option disabled>You can choose the default in Settings {'>'} Target Language</option>
+                                    {
+                                        addNewLanguage && (
+                                            iso6391.getAllCodes().map((item) => (
+                                                <option key={item} value={item}>
+                                                    {iso6391.getName(item)}
+                                                </option>
+                                            ))
+                                        )
+                                    }
+                                </select>
+                            </div>
                             <Button onClick={handleSubmit} type="button" disabled={isLoading} text={'Submit'} />
                         </Form>
                     </Modal>
