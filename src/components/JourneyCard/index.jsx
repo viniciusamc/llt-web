@@ -23,13 +23,12 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
         title = 'Youtube';
     } else if (icon == 'anki') {
         cardIcon = anki;
-    } else if (icon == 'Movie'){
+    } else if (icon == 'Movie') {
         cardIcon = movie
-    } else if (icon == 'Podcast'){
+    } else if (icon == 'Podcast') {
         cardIcon = podcast
-    } else if (icon == 'books' || icon == 'books_history'){
+    } else {
         cardIcon = book
-        title = 'Book'
     }
 
     return (
@@ -51,7 +50,7 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
                     <p>{time}</p>
                     {words == 0 && <p>Words weren't available</p>}
                     {words > 0 && <p>Words {words}</p>}
-                    <MdDelete style={{cursor: 'pointer', fill: '#F03C3C'}} onClick={onClick} fontSize={32}/>
+                    <MdDelete style={{ cursor: 'pointer', fill: '#F03C3C' }} onClick={onClick} fontSize={32} />
                 </div>
             </Bottom>
         </Container>
