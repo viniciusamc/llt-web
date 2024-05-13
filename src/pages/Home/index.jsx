@@ -261,6 +261,16 @@ export function Home() {
 
                         dailyDetails[day][element.source].activity.push(element);
 
+                        if (element.source === 'books_history' && element.time_diff) {
+                            const timeSplited = element.time_diff.split(':')
+                            const hours = parseInt(timeSplited[0]);
+                            const minutes = parseInt(timeSplited[1]);
+                            const seconds = parseInt(timeSplited[2]);
+                            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+
+                            dailyDetails[day][element.source].totalMinutes += totalMinutes;
+                            return
+                        }
                         const timeSplited = element.time.split(':');
                         const hours = parseInt(timeSplited[0]);
                         const minutes = parseInt(timeSplited[1]);
