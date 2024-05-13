@@ -419,7 +419,9 @@ export function Home() {
                     setErrorMessage('Failed, Try Again');
                     setIsLoading(false);
                     clearMessage();
-                });
+                }).finally(() => {
+                    getInfoUser();
+                })
         }
 
         if (modalValue == 'Anki') {
@@ -441,6 +443,8 @@ export function Home() {
                     setErrorMessage('Failed, Try Again Later');
                     setIsLoading(false);
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -474,6 +478,8 @@ export function Home() {
                     setErrorMessage('Failed, try again later');
                     setIsLoading(false);
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -500,6 +506,8 @@ export function Home() {
                     setErrorMessage('Failed, try again later');
                     setIsLoading(false);
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -534,6 +542,8 @@ export function Home() {
                         setErrorMessage('Was not possible to create a book, try again later');
                         setIsLoading(false);
                         clearMessage();
+                    }).finally(() => {
+                        getInfoUser();
                     });
             } else {
                 const data = {
@@ -563,6 +573,8 @@ export function Home() {
                         setErrorMessage(e.response.data.message);
                         setIsLoading(false);
                         clearMessage();
+                    }).finally(() => {
+                        getInfoUser();
                     });
             }
         }
@@ -585,10 +597,10 @@ export function Home() {
                     setErrorMessage('Failed, Try again later');
                     setIsLoading(false);
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
-
-        getInfoUser();
     }
 
     function handleDelete(source, id) {
@@ -601,6 +613,8 @@ export function Home() {
                 .catch((e) => {
                     setErrorMessage('Was not possible to delete this content, try again later');
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -613,6 +627,8 @@ export function Home() {
                 .catch((e) => {
                     setErrorMessage('Was not possible to delete this content, try again later');
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -625,6 +641,8 @@ export function Home() {
                 .catch((e) => {
                     setErrorMessage('Was not possible to delete this content, try again later');
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
 
@@ -637,10 +655,10 @@ export function Home() {
                 .catch((e) => {
                     setErrorMessage('Was not possible to delete this content, try again later');
                     clearMessage();
+                }).finally(() => {
+                    getInfoUser();
                 });
         }
-
-        getInfoUser();
     }
 
     const [itemOffset, setItemOffset] = useState(0);
