@@ -1319,10 +1319,9 @@ export function Home() {
                             total={item.vocabulary ? 'Vocabulary ' + item.vocabulary : null}
                             diff={item.diff_last ? 'Difference ' + item.diff_last : null}
                             bookTitle={item.diff_last ? 'Difference ' + item.diff_last : null}
-                            actualPage={item.actual_page ? 'Actual Page ' + item.actual_page : null}
                             readType={item.readType ? 'Read Type ' + item.read_type : null}
                             timeSession={item.time_diff ? 'Session Time ' + item.time_diff : null}
-                            totalPages={item.total_pages ? 'Readed Pages ' + item.total_pages : null}
+                            totalPages={item.total_pages && item.actual_page ? `${item.actual_page}/${item.total_pages}` : null}
                             onClick={() => handleDelete(item.source, item.id)}
                         />
                     );
