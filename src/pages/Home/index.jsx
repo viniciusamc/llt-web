@@ -1301,7 +1301,6 @@ export function Home() {
                     }
                     if (item.source == 'books_history') {
                         const thisBook = listJourney.filter((a) => a.id == item.id_book)[0]
-                        item.source = thisBook.target_language
                         item.source = thisBook.title
                     }
                     return (
