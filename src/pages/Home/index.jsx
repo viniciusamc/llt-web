@@ -55,6 +55,7 @@ import useWindowSize from 'react-use/lib/useWindowSize';
 import Confetti from 'react-confetti';
 
 import { MonthPicker, MonthInput } from 'react-lite-month-picker';
+import MoonLoader from "react-spinners/MoonLoader";
 
 const wsz = 320;
 const hsz = 320;
@@ -133,6 +134,7 @@ export function Home() {
     const [filter, setFilter] = useState('All');
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
 
     const [formData, setFormData] = useState(initialFormData);
 
@@ -701,7 +703,9 @@ export function Home() {
     }
 
     useEffect(() => {
+        setIsFetching(true)
         getInfoUser();
+        setIsFetching(false)
 
         const userName = localStorage.getItem('@username');
 
@@ -754,6 +758,23 @@ export function Home() {
     return (
         <>
             <Header />
+            {isFetching && (
+                <div style={{
+                    position: 'fixed',
+                    top: '0',
+                    width: '100vw',
+                    height: '100vh',
+                    zIndex: '100',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.2)',
+                    backdropFilter: 'blur(3px)'
+                }}>
+                    <MoonLoader color='#fff' loading={isFetching} size={80} speedMultiplier={0.6} />
+                </div>
+
+            )}
             {confetti && (
                 <Confetti
                     width={width}
