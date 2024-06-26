@@ -161,14 +161,17 @@ export function Home() {
                 api.get('/v1/books'),
                 api.get('/v1/talk'),
                 api.get('/v1/users'),
+                api.get('/v1/medias'),
             ])
             .then(
-                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs) => {
+                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs, mediasResponse) => {
                     const response = userResponse;
                     const user = userConfigs;
                     const vocabulary = vocabularyResponse;
                     const books = booksResponse;
                     const talk = talkResponse;
+                    const medias = mediasResponse
+                    console.log(response.data)
 
                     setBookList(books.data.books);
                     setOrderedList(response)
@@ -183,8 +186,8 @@ export function Home() {
                         : 0;
                     setVocabulary(totalVocabulary);
 
-                    setMediasWords(response.data.totalWordsMedia);
-                    setTotalTitmeYTBPD(response.data.mediasTotalTime);
+                    setMediasWords(medias.data.totalWordCount);
+                    setTotalTitmeYTBPD(medias.data.time);
 
                     setBooksWords(books.data.totalBooksWords);
                     setBooksTotalPages(books.data.totalBooksPages);

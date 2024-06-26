@@ -45,6 +45,9 @@ export function Settings() {
         setIsLoading(false)
     }
 
+    function handleDeleteAccount() {
+    }
+
     useEffect(() => {
         getUser();
     }, []);
@@ -104,7 +107,7 @@ export function Settings() {
                     value={awp}
                 />
 
-                <Button text={'Save'} onClick={() => handleSubmit()} disabled={isLoading}/>
+                <Button text={'Save'} onClick={() => handleSubmit()} disabled={isLoading} />
             </Section>
         </>
     );
