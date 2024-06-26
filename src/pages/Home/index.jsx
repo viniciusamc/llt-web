@@ -57,6 +57,7 @@ import Confetti from 'react-confetti';
 import { MonthPicker, MonthInput } from 'react-lite-month-picker';
 import MoonLoader from "react-spinners/MoonLoader";
 import iso6391 from 'iso-639-1';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 const wsz = 320;
 const hsz = 320;
@@ -116,6 +117,7 @@ export function Home() {
     const [vocabulary, setVocabulary] = useState(0);
 
     const [mediasWords, setMediasWords] = useState(0);
+    const [mediasTime, setMediasTime] = useState('00:00:00')
 
     const [booksWords, setBooksWords] = useState(0);
     const [booksTotalPages, setBooksTotalPages] = useState(0);
@@ -158,168 +160,186 @@ export function Home() {
     const [addNewLanguage, setAddNewLanguage] = useState()
 
     async function getInfoUser() {
-        axios
-            .all([
-                api.get('/v1/users/user'),
-                api.get('/v1/vocabulary'),
-                api.get('/v1/books'),
-                api.get('/v1/talk'),
-                api.get('/v1/users'),
-            ])
-            .then(
-                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs) => {
-                    const response = userResponse;
-                    const user = userConfigs;
-                    const vocabulary = vocabularyResponse;
-                    const books = booksResponse;
-                    const talk = talkResponse;
+        let response = await api.get("/v1/user")
+        console.log(response)
+        response = response.data
 
-                    setBookList(books.data.books);
-                    setOrderedList(response)
-                    setLanguage(response.data.usedLanguages)
+        // book
+        setBookList(response.books.books)
+        setBooksTotalTime(response.books.totalTimeBooks)
+        setBooksWords(response.books.totalBooksWords)
+        setBooksHistory(response.books.booksLastHistory)
+        setBooksTotalPages(response.books.totalBooksPages)
 
-                    setTotalTime(response.data.totalTime);
-                    setStreak(response.data.streak.currentStreak);
-                    setLongestStreak(response.data.streak.longestStreak);
+        // medias
+        setMediasWords(response.medias.totalWordCount)
+        setTotalTitmeYTBPD(response.medias.time)
 
-                    setVocabularyAverage(vocabulary.data.average);
-                    const totalVocabulary = vocabulary.data.vocabulary.length
-                        ? vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary || 0
-                        : 0;
-                    setVocabulary(totalVocabulary);
+        //talk
+        setTalk(response.talk.output.length)
+        setTalkTotalTime(response.talk.outputTotalTime)
+        setTalkAverage(response.talk.averageTime)
+        setTalkStreak(response.talk.outputStreak.currentStreak)
 
-                    setMediasWords(response.data.totalWordsMedia);
-                    setTotalTitmeYTBPD(response.data.mediasTotalTime);
+        // vocabulary
+        setVocabularyAverage(response.vocabulary.average)
+        setVocabulary(response.vocabulary.vocabulary.length)
 
-                    setBooksWords(books.data.totalBooksWords);
-                    setBooksTotalPages(books.data.totalBooksPages);
-                    setBooksTotalTime(books.data.totalTimeBooks);
-                    setBooks(books.data.books.length);
-                    setBooksHistory(books.data.booksLastHistory);
+        const ordered = [...response.anki.anki, ...response.books.booksHistory, ...response.medias.videos, ...response.talk.output, ...response.vocabulary.vocabulary].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
-                    setTalk(talk.data.output.length);
-                    setTalkTotalTime(talk.data.outputTotalTime);
-                    setTalkAverage(talk.data.averageTime);
-                    setTalkStreak(talk.data.outputStreak.currentStreak);
+        setOrderedList(ordered)
+        setListJourney(ordered);
+        setListJourneyWithoutFilter(ordered);
 
-                    setListJourney(response.data.ordered);
-                    setListJourneyWithoutFilter(response.data.ordered);
+        let daysStreak = 0
+        let bigStreak = 0
+        let daysOfImersion = 0
+        for (let i = 1; i < ordered.length; i++) {
+            const splited = ordered[i].created_at.split("T")[0];
+            const splitedP1 = new Date(splited);
 
-                    setDaysOfImmersion(response.data.heatMap.length);
+            const splitb = ordered[i - 1].created_at.split("T")[0];
+            const splitbP1 = new Date(splitb);
 
-                    const heatMapStart = new Date(response.data.heatMap[0].date);
-                    setHeatMapStartdate(heatMapStart);
-                    setHeatMap(response.data.heatMap);
+            const diffInTime = Math.abs(splitedP1 - splitbP1);
+            const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
 
-                    const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-                    const todayGoal = response.data.heatMap.filter((entry) => entry.date === today);
-                    setDailyGoal(user.data.configs.dailyGoal);
-                    if (todayGoal && todayGoal.length > 0) {
-                        setDailyGoalDid(todayGoal[0].count || 0);
-                    } else {
-                        setDailyGoalDid(0);
-                    }
+            if (diffInDays === 1) {
+                daysStreak++;
+                daysOfImersion++
+            } else {
+                if (splitb !== splited) {
+                    daysOfImersion++
+                    daysStreak = 1;
+                }
+            }
 
-                    if (dailyGoalDid >= user.data.configs.dailyGoal) {
-                        setConfetti(true);
-                    }
-                    setChartMonthHour(response.data.hoursByMonth.reverse());
-                    const cumulativeHours = [];
-                    let cumulativeSum = 0;
+            if (daysStreak > bigStreak) {
+                bigStreak = daysStreak;
+            }
+        }
+        setStreak(daysStreak)
+        setLongestStreak(bigStreak)
+        setDaysOfImmersion(daysOfImersion);
 
-                    const dailyRegisterDate = response.data.ordered.filter((item) => {
-                        const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
-                        const itemDate = dayjs(itemDateFormatted)
-                        const startOfCurrentMonth = dayjs().startOf('month');
-                        const endOfCurrentMonth = dayjs().endOf('month');
+        //            setLanguage(response.data.usedLanguages)
+        //            setTotalTime(response.data.totalTime);
+        //
+        //            const heatMapStart = new Date(response.data.heatMap[0].date);
+        //            setHeatMapStartdate(heatMapStart);
+        //            setHeatMap(response.data.heatMap);
+        //
+        //            const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+        //            const todayGoal = response.data.heatMap.filter((entry) => entry.date === today);
+        //            setDailyGoal(user.data.configs.dailyGoal);
+        //            if (todayGoal && todayGoal.length > 0) {
+        //                setDailyGoalDid(todayGoal[0].count || 0);
+        //            } else {
+        //                setDailyGoalDid(0);
+        //            }
+        //
+        //            if (dailyGoalDid >= user.data.configs.dailyGoal) {
+        //                setConfetti(true);
+        //            }
+        //            setChartMonthHour(response.data.hoursByMonth.reverse());
+        //            const cumulativeHours = [];
+        //            let cumulativeSum = 0;
+        //
 
-                        return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
-                    });
+        const dailyRegisterDate = ordered.filter((item) => {
+            const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
+            const itemDate = dayjs(itemDateFormatted)
+            const startOfCurrentMonth = dayjs().startOf('month');
+            const endOfCurrentMonth = dayjs().endOf('month');
 
-                    const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
+            return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+        });
 
-                    const dailyDetails = {};
+        const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
 
-                    const firstDayOfMonth = dayjs().startOf('month');
+        const dailyDetails = {};
 
-                    const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
+        const firstDayOfMonth = dayjs().startOf('month');
 
-                    for (let i = 0; i < daysUntilToday; i++) {
-                        const currentDate = firstDayOfMonth.add(i, 'day');
-                        const formattedDate = currentDate.format('MM/DD/YYYY');
-                        dailyDetails[formattedDate] = {};
-                    }
+        const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
 
-                    dailyRegisterDate.forEach(element => {
-                        const day = dayjs(element.created_at).format('MM/DD/YYYY');
+        for (let i = 0; i < daysUntilToday; i++) {
+            const currentDate = firstDayOfMonth.add(i, 'day');
+            const formattedDate = currentDate.format('MM/DD/YYYY');
+            dailyDetails[formattedDate] = {};
+        }
 
-                        if (!dailyDetails[day]) {
-                            dailyDetails[day] = {};
-                        }
+        dailyRegisterDate.forEach(element => {
+            const day = dayjs(element.created_at).format('MM/DD/YYYY');
 
-                        if (!dailyDetails[day][element.source]) {
-                            dailyDetails[day][element.source] = {
-                                activity: [],
-                                totalMinutes: 0,
-                            };
-                        }
+            if (!dailyDetails[day]) {
+                dailyDetails[day] = {};
+            }
 
-                        dailyDetails[day][element.source].activity.push(element);
+            if (!dailyDetails[day][element.source]) {
+                dailyDetails[day][element.source] = {
+                    activity: [],
+                    totalMinutes: 0,
+                };
+            }
 
-                        if (element.source === 'books_history' && element.time_diff) {
-                            const timeSplited = element.time_diff.split(':')
-                            const hours = parseInt(timeSplited[0]);
-                            const minutes = parseInt(timeSplited[1]);
-                            const seconds = parseInt(timeSplited[2]);
-                            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+            dailyDetails[day][element.source].activity.push(element);
 
-                            dailyDetails[day][element.source].totalMinutes += totalMinutes;
-                            return
-                        }
-                        const timeSplited = element.time.split(':');
-                        const hours = parseInt(timeSplited[0]);
-                        const minutes = parseInt(timeSplited[1]);
-                        const seconds = parseInt(timeSplited[2]);
-                        const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+            if (element.source === 'books_history' && element.time_diff) {
+                const timeSplited = element.time_diff.split(':')
+                const hours = parseInt(timeSplited[0]);
+                const minutes = parseInt(timeSplited[1]);
+                const seconds = parseInt(timeSplited[2]);
+                const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
 
-                        dailyDetails[day][element.source].totalMinutes += totalMinutes;
-                    });
+                dailyDetails[day][element.source].totalMinutes += totalMinutes;
+                return
+            }
+            const timeSplited = element.time.split(':');
+            const hours = parseInt(timeSplited[0]);
+            const minutes = parseInt(timeSplited[1]);
+            const seconds = parseInt(timeSplited[2]);
+            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+
+            dailyDetails[day][element.source].totalMinutes += totalMinutes;
+        });
 
 
-                    const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
-                        date: key,
-                        minutes: dailyDetails[key],
-                    }));
+        const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
+            date: key,
+            minutes: dailyDetails[key],
+        }));
 
-                    const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
-                        const date = dayjs(item.date).format('MM/DD/YYYY');
-                        const minutes = item.minutes;
-                        const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
-                        return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
-                    });
+        const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
+            const date = dayjs(item.date).format('MM/DD/YYYY');
+            const minutes = item.minutes;
+            const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
+            return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
+        });
 
-                    setDailyRegister(dailyMinutesSeparated)
+        setDailyRegister(dailyMinutesSeparated)
 
-                    for (let i = 0; i < response.data.hoursByMonth.length; i++) {
-                        const currentMonthYear = response.data.hoursByMonth[i].monthYear;
-                        const currentTotalTime = response.data.hoursByMonth[i].totalTime;
-
-                        cumulativeSum += currentTotalTime;
-
-                        const cumulativeObject = {
-                            monthYear: currentMonthYear,
-                            totalTime: cumulativeSum,
-                        };
-
-                        cumulativeHours.push(cumulativeObject);
-                    }
-
-                    setChartMonthCumulative(cumulativeHours);
-                }),
-            )
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        //
+        //            for (let i = 0; i < response.data.hoursByMonth.length; i++) {
+        //                const currentMonthYear = response.data.hoursByMonth[i].monthYear;
+        //                const currentTotalTime = response.data.hoursByMonth[i].totalTime;
+        //
+        //                cumulativeSum += currentTotalTime;
+        //
+        //                const cumulativeObject = {
+        //                    monthYear: currentMonthYear,
+        //                    totalTime: cumulativeSum,
+        //                };
+        //
+        //                cumulativeHours.push(cumulativeObject);
+        //            }
+        //
+        //            setChartMonthCumulative(cumulativeHours);
+        //        }),
+        //    )
+        //    .catch((error) => {
+        //        console.error('Error:', error);
+        //    });
     }
 
     function handleDailyRegister() {
@@ -396,6 +416,7 @@ export function Home() {
         if (modalValue == 'Youtube' || modalValue == 'Podcast') {
             setIsLoading(true);
 
+
             const data = {
                 url: formData.youtubeUrl,
                 type: formData.modalValue,
@@ -420,6 +441,10 @@ export function Home() {
                 setIsLoading(false);
                 return;
             }
+
+            YoutubeTranscript.fetchTranscript("Oa7wq7Y9aJ4").then((response) => console.log(response)).catch((error) => {
+                console.error(error)
+            })
 
             api.post('/v1/medias', data)
                 .then((response) => {

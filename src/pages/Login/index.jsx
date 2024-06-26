@@ -35,6 +35,10 @@ export function Login() {
 
         const response = await signIn({ email, password });
 
+        if (response.data.error) {
+            setErrorMessage(response.data.error)
+        }
+
         if (response.errorStatus === 400) {
             setErrorMessage('Your account is not verified. Please check your email.');
         }

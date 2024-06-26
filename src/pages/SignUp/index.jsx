@@ -54,15 +54,10 @@ export function SignUp() {
                 }, 2500);
             })
             .catch((e) => {
-                if (e.response.status == 409) {
-                    setErrorMessage('Email and/or username already exists');
-                    setClear();
-                    return;
-                } else {
-                    setErrorMessage('Try Again Later');
-                    setClear();
-                    return;
-                }
+                setErrorMessage(e.response.data.error);
+                setClear();
+                return;
+
             });
     }
 

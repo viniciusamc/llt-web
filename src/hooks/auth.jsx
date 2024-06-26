@@ -26,21 +26,7 @@ export const AuthProvider = ({ children }) => {
                 return { success: false };
             })
             .catch((e) => {
-                if (e.response.status === 401) {
-                    return { errorStatus: 401 };
-                }
-
-                if (e.response.status === 500) {
-                    return { errorStatus: 500 };
-                }
-
-                if (e.response.status === 400) {
-                    return { errorStatus: 400 };
-                }
-
-                if (e.response.status === 404) {
-                    return { errorStatus: 404 };
-                }
+                return e.response
             });
     };
 

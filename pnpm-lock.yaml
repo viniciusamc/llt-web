@@ -95,6 +95,9 @@ importers:
       swiper:
         specifier: ^11.1.1
         version: 11.1.1
+      youtube-transcript:
+        specifier: ^1.2.1
+        version: 1.2.1
     devDependencies:
       '@types/react':
         specifier: ^18.2.79
@@ -2370,6 +2373,10 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  youtube-transcript@1.2.1:
+    resolution: {integrity: sha512-TvEGkBaajKw+B6y91ziLuBLsa5cawgowou+Bk0ciGpjELDfAzSzTGXaZmeSSkUeknCPpEr/WGApOHDwV7V+Y9Q==}
+    engines: {node: '>=18.0.0'}
 
 snapshots:
 
@@ -4815,3 +4822,5 @@ snapshots:
   yallist@4.0.0: {}
 
   yocto-queue@0.1.0: {}
+
+  youtube-transcript@1.2.1: {}
