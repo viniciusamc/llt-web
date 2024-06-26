@@ -456,7 +456,7 @@ export function Home() {
                         setSuccessMessage('Youtube Created with Success');
                         setInfoMessage('The YouTube does not include subtitles.');
                         setIsLoading(false);
-                        clearMessage(4000);
+                        clearMessage(3500);
                     }
                 })
                 .catch((e) => {
