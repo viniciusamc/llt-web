@@ -18,10 +18,10 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
         cardIcon = vocabulary;
     } else if (icon == 'talk') {
         cardIcon = discord;
-    } else if (icon == 'Youtube' || icon == 'Video') {
+    } else if (icon == 'Medias' || icon == 'Video') {
         cardIcon = youtube;
         title = 'Youtube';
-    } else if (icon == 'anki') {
+    } else if (icon == 'Anki') {
         cardIcon = anki;
     } else if (icon == 'Movie') {
         cardIcon = movie

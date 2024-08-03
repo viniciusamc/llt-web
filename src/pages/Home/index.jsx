@@ -7,6 +7,7 @@ import { Header } from '../../components/Header';
 import { Input } from '../../components/Input/index.jsx';
 import { Button } from '../../components/Button/index.jsx';
 import { Flash } from '../../components/Flash/';
+import 'cal-heatmap/cal-heatmap.css';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules';
@@ -19,7 +20,10 @@ import 'swiper/css/pagination';
 
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
+import duration from 'dayjs/plugin/duration';
+
 dayjs.extend(isBetween);
+dayjs.extend(duration);
 
 import { useState, useEffect } from 'react';
 import {
@@ -33,6 +37,7 @@ import {
     YAxis,
     Legend,
     ResponsiveContainer,
+    Area,
 } from 'recharts';
 import HeatMap from '@uiw/react-heat-map';
 import ToolTipHeatMap from '@uiw/react-tooltip';
@@ -57,7 +62,13 @@ import Confetti from 'react-confetti';
 import { MonthPicker, MonthInput } from 'react-lite-month-picker';
 import MoonLoader from "react-spinners/MoonLoader";
 import iso6391 from 'iso-639-1';
-import { YoutubeTranscript } from 'youtube-transcript';
+
+import CalHeatmap from 'cal-heatmap';
+import Tooltips from 'cal-heatmap/plugins/Tooltip';
+import Legends from 'cal-heatmap/plugins/Legend';
+import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel';
+
+const cal = new CalHeatmap()
 
 const wsz = 320;
 const hsz = 320;
@@ -156,7 +167,7 @@ export function Home() {
         year: dayjs().year(),
     })
     const [orderedList, setOrderedList] = useState([])
-    const [language, setLanguage] = useState([])
+    const [languages, setLanguages] = useState([])
     const [addNewLanguage, setAddNewLanguage] = useState()
 
     async function getInfoUser() {
@@ -165,11 +176,17 @@ export function Home() {
         response = response.data
 
         // book
+        setBooks(response.books.books.length)
         setBookList(response.books.books)
         setBooksTotalTime(response.books.totalTimeBooks)
         setBooksWords(response.books.totalBooksWords)
         setBooksHistory(response.books.booksLastHistory)
         setBooksTotalPages(response.books.totalBooksPages)
+
+        //const totalTimeBooks = response.books.booksLastHistory.map((item) => {
+        //    console.log(item.time)
+        //})
+
 
         // medias
         setMediasWords(response.medias.totalWordCount)
@@ -222,29 +239,32 @@ export function Home() {
         setLongestStreak(bigStreak)
         setDaysOfImmersion(daysOfImersion);
 
-        //            setLanguage(response.data.usedLanguages)
-        //            setTotalTime(response.data.totalTime);
-        //
-        //            const heatMapStart = new Date(response.data.heatMap[0].date);
-        //            setHeatMapStartdate(heatMapStart);
-        //            setHeatMap(response.data.heatMap);
-        //
-        //            const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-        //            const todayGoal = response.data.heatMap.filter((entry) => entry.date === today);
-        //            setDailyGoal(user.data.configs.dailyGoal);
-        //            if (todayGoal && todayGoal.length > 0) {
-        //                setDailyGoalDid(todayGoal[0].count || 0);
-        //            } else {
-        //                setDailyGoalDid(0);
-        //            }
-        //
-        //            if (dailyGoalDid >= user.data.configs.dailyGoal) {
-        //                setConfetti(true);
-        //            }
-        //            setChartMonthHour(response.data.hoursByMonth.reverse());
-        //            const cumulativeHours = [];
-        //            let cumulativeSum = 0;
-        //
+        const parsedDurationMonth = response.month_report.map((item) => {
+            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
+            const monthItem = new Date(item.month.split('T')[0])
+            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
+                month: 'long',
+                year: 'numeric',
+            });
+            return {
+                month: parsedMonth,
+                duration: durationNew
+            }
+        })
+
+        setChartMonthHour(parsedDurationMonth)
+        setHeatMapStartdate(response.user.created_at)
+        setHeatMap(response.daily_report)
+
+        const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+        const todayGoal = response.daily_report.filter((entry) => entry.date === today);
+        setDailyGoal(response.user.configs.dailyGoal);
+        if (todayGoal && todayGoal.length > 0) {
+            setDailyGoalDid(todayGoal[0].count || 0);
+        } else {
+            setDailyGoalDid(0);
+        }
 
         const dailyRegisterDate = ordered.filter((item) => {
             const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
@@ -255,7 +275,7 @@ export function Home() {
             return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
         });
 
-        const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
+        const activities = ["Youtube", "Podcast", "books_history", "Books", "Anki", "Talk", "Vocabulary"];
 
         const dailyDetails = {};
 
@@ -285,7 +305,7 @@ export function Home() {
 
             dailyDetails[day][element.source].activity.push(element);
 
-            if (element.source === 'books_history' && element.time_diff) {
+            if (element.source === 'BooksHistory' && element.time_diff) {
                 const timeSplited = element.time_diff.split(':')
                 const hours = parseInt(timeSplited[0]);
                 const minutes = parseInt(timeSplited[1]);
@@ -317,94 +337,81 @@ export function Home() {
             return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
         });
 
+        const languages = []
         setDailyRegister(dailyMinutesSeparated)
-
-        //
-        //            for (let i = 0; i < response.data.hoursByMonth.length; i++) {
-        //                const currentMonthYear = response.data.hoursByMonth[i].monthYear;
-        //                const currentTotalTime = response.data.hoursByMonth[i].totalTime;
-        //
-        //                cumulativeSum += currentTotalTime;
-        //
-        //                const cumulativeObject = {
-        //                    monthYear: currentMonthYear,
-        //                    totalTime: cumulativeSum,
-        //                };
-        //
-        //                cumulativeHours.push(cumulativeObject);
-        //            }
-        //
-        //            setChartMonthCumulative(cumulativeHours);
-        //        }),
-        //    )
-        //    .catch((error) => {
-        //        console.error('Error:', error);
-        //    });
-    }
-
-    function handleDailyRegister() {
-        const ordered = orderedList.data.ordered
-
-        const dailyRegisterDate = ordered.filter((item) => {
-            const itemDate = dayjs(item.created_at).format('MM/DD/YYYY');
-            const itemDateFormatted = dayjs(itemDate)
-            const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
-            const endOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).endOf('month')
-
-            return itemDateFormatted.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+        ordered.forEach((item) => {
+            if (item.target_language && !languages.includes(item.target_language)) {
+                languages.push(item.target_language);
+            }
         });
 
-        const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
-
-        const dailyDetails = {};
-
-        const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
-
-        for (let i = 0; i < 30; i++) {
-            const currentDate = startOfCurrentMonth.add(i, 'day');
-            const formattedDate = currentDate.format('MM/DD/YYYY');
-            dailyDetails[formattedDate] = {};
+        if (languages.length == 0) {
+            languages.push(response.user.configs.TL)
         }
 
-        dailyRegisterDate.forEach(element => {
-            const day = dayjs(element.created_at).format('MM/DD/YYYY');
+        if (!formData.targetLanguage) {
+            formData.targetLanguage = response.user.configs.TL
+        }
 
-            if (!dailyDetails[day]) {
-                dailyDetails[day] = {};
-            }
+        setLanguages(languages)
 
-            if (!dailyDetails[day][element.source]) {
-                dailyDetails[day][element.source] = {
-                    activity: [],
-                    totalMinutes: 0,
-                };
-            }
+        const dailyGoalTime = response.daily_report.filter((item) => {
+            const itemDate = dayjs(item.date).add(+1, "day").format('DD/MM/YYYY')
+            const today = dayjs().format('DD/MM/YYYY')
 
-            dailyDetails[day][element.source].activity.push(element);
+            return itemDate === today
+        })
 
-            const timeSplited = element.time.split(':');
-            const hours = parseInt(timeSplited[0]);
-            const minutes = parseInt(timeSplited[1]);
-            const seconds = parseInt(timeSplited[2]);
-            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+        setDailyGoalDid(dailyGoalTime[0].count)
 
-            dailyDetails[day][element.source].totalMinutes += totalMinutes;
-        });
+        let totalMinutes = 0
+        response.daily_report.map((item) => {
+            totalMinutes += item.count
 
+        })
+        const hours = Math.floor(totalMinutes / 60);
+        const remainingMinutes = totalMinutes % 60;
+        const totalTimeF = `${hours}h ${remainingMinutes}m`;
 
-        const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
-            date: key,
-            minutes: dailyDetails[key],
-        }));
+        setTotalTime(totalTimeF)
 
-        const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
-            const date = item.date;
-            const minutes = item.minutes;
-            const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
-            return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
-        });
-
-        setDailyRegister(dailyMinutesSeparated)
+        cal.paint({
+            data: {
+                source: response.daily_report,
+                type: 'json',
+                x: (datum) => new Date(datum.date),
+                y: (datum) => datum.count
+            },
+            scale: {
+                color: {
+                    type: 'threshold',
+                    range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                    domain: [10, 20, 30, 60],
+                },
+            },
+            date: {
+                start: dayjs().format("YYYY")
+            },
+            domain: {
+                type: "month",
+                label: { text: 'MMM', textAlign: 'start', position: 'top' },
+            },
+            subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
+            itemSelector: "#heatmap",
+            theme: "dark",
+        },
+            [
+                [
+                    Tooltips,
+                    {
+                        text: function(date, value, dayjsDate) {
+                            return (
+                                (value ? value + ' Minutes' : '0  Minutes 😔') + ' on ' + dayjsDate.format('LL')
+                            )
+                        }
+                    }
+                ]
+            ])
     }
 
     function handleSubmit(e) {
@@ -415,7 +422,6 @@ export function Home() {
 
         if (modalValue == 'Youtube' || modalValue == 'Podcast') {
             setIsLoading(true);
-
 
             const data = {
                 url: formData.youtubeUrl,
@@ -442,22 +448,11 @@ export function Home() {
                 return;
             }
 
-            YoutubeTranscript.fetchTranscript("Oa7wq7Y9aJ4").then((response) => console.log(response)).catch((error) => {
-                console.error(error)
-            })
-
             api.post('/v1/medias', data)
                 .then((response) => {
-                    if (response.data.closed_caption) {
-                        setSuccessMessage('Youtube Created with Success');
-                        setIsLoading(false);
-                        clearMessage();
-                    } else {
-                        setSuccessMessage('Youtube Created with Success');
-                        setInfoMessage('The YouTube does not include subtitles.');
-                        setIsLoading(false);
-                        clearMessage(3500);
-                    }
+                    setSuccessMessage('Youtube Created with Success');
+                    setIsLoading(false);
+                    clearMessage();
                 })
                 .catch((e) => {
                     setErrorMessage('Failed, Try Again');
@@ -472,9 +467,9 @@ export function Home() {
             setIsLoading(true);
 
             const data = {
-                reviewed: formData.ankiReviewed,
-                newCards: formData.ankiNew,
-                time: formData.ankiLong,
+                reviewed: Number(formData.ankiReviewed),
+                newCards: Number(formData.ankiNew),
+                time: Number(formData.ankiLong),
                 target_language: targetLanguage,
             };
 
@@ -538,11 +533,6 @@ export function Home() {
                 target_language: targetLanguage,
             };
 
-            if (!data.time || !Number.isInteger(data.time)) {
-                setErrorMessage('Please, insert the time in minutes in the field "How Long"');
-                clearMessage();
-                return;
-            }
             api.post('/v1/talk', data)
                 .then((response) => {
                     setSuccessMessage('Talk Created with success!');
@@ -550,7 +540,7 @@ export function Home() {
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Failed, try again later');
+                    setErrorMessage(e.response.data.error);
                     setIsLoading(false);
                     clearMessage();
                 }).finally(() => {
@@ -619,6 +609,7 @@ export function Home() {
                         clearMessage();
                     })
                     .catch((e) => {
+                        console.log(e)
                         setErrorMessage(e.response.data.message);
                         setIsLoading(false);
                         clearMessage();
@@ -758,14 +749,16 @@ export function Home() {
         const userName = localStorage.getItem('@username');
 
         setUsername(userName);
+
     }, []);
 
     function updateBookPages(selected) {
         const selectedBook = bookList.filter((book) => {
             return book.title == selected;
-        });
+        })[0]
+
         if (selectedBook) {
-            const history = booksHistory.filter((book) => book.id_book === selectedBook[0].id);
+            const history = booksHistory.filter((book) => book.id_book === selectedBook.id);
             setEditBook(history[0].id_book);
             setBookPages(history[0].actual_page);
         }
@@ -1055,11 +1048,15 @@ export function Home() {
                                         setAddNewLanguage(!addNewLanguage)
                                     }
                                 }} value={formData.targetLanguage}>
-                                    {language.map((item, index) => {
-                                        return (
-                                            <option value={item.code} key={index}>{item.languageName}</option>
+                                    {
+                                        languages && (
+                                            languages.map((item, index) => (
+                                                <option key={index} value={item}>
+                                                    {iso6391.getName(item)}
+                                                </option>
+                                            ))
                                         )
-                                    })}
+                                    }
                                     <option value={'newLanguage'}>Add a new Language</option>
                                     <option disabled>You can choose the default in Settings {'>'} Target Language</option>
                                     {
@@ -1101,7 +1098,8 @@ export function Home() {
                 >
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                            <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
+                            <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -1189,101 +1187,42 @@ export function Home() {
                         borderBottomLeftRadius: 8,
                     }}
                 >
-                    <div style={{ width: 200, height: 200 }}>
-                        <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
-                        <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
-                    </div>
-                </Chart>
-                <Chart
-                    style={{
-                        borderTopRightRadius: 8,
-                        borderBottomRightRadius: 8,
-                    }}
-                >
-                    <div>
-                        <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
-                        <HeatMap
-                            value={heatMap}
-                            weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
-                            rectSize={16}
-                            startDate={heatMapStartDate}
-                            endDate={new Date()}
-                            style={{ color: 'white' }}
-                            legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
-                            rectProps={{
-                                rx: 5,
-                            }}
-                            panelColors={{
-                                0: '#222222',
-                                1: '#221e22',
-                                10: '#14532d',
-                                30: '#166534',
-                                40: '#166534',
-                                60: '#15803d',
-                                120: '#16a34a',
-                            }}
-                            rectRender={(props, data) => {
-                                return (
-                                    <ToolTipHeatMap
-                                        placement="top"
-                                        content={`Time ${data.date}: ${data.count || 0} minutes`}
-                                    >
-                                        <rect {...props} />
-                                    </ToolTipHeatMap>
-                                );
-                            }}
-                        />
-                    </div>
-                </Chart>
-            </Charts>
-            <Charts>
-                <Chart style={{ overflowX: 'auto', display: 'flex', alignItems: 'center' }}>
-                    <MonthInput
-                        selected={selectedMonthData}
-                        setShowMonthPicker={setIsPickerOpen}
-                        showMonthPicker={isPickerOpen}
-                        bgColor={"#221E22"}
-                        bgColorHover={"#000"}
-                        textColor={"#fff"}
-                        size={"small"}
-                    />
-                    {isPickerOpen ? (
-                        <div
-                            style={{ zIndex: '100000', width: '100%' }}
-                        >
-                            <MonthPicker
-                                setIsOpen={setIsPickerOpen}
-                                selected={selectedMonthData}
-                                onChange={(e) => {
-                                    setSelectedMonthData(e);
-                                    handleDailyRegister();
+                    <div style={{
+                        overflow: 'auto',
+                        alignItems: 'stretch',
+                        width: '100%',
+                    }}>
+                        <h4 style={{ textAlign: 'center', float: 'left' }}>Your Heat Map</h4>
+                        <div id='heatmap' style={{
+                            margin: '0 auto'
+                        }}></div>
+                        <div style={{display: 'flex', flex: 1, justifyContent: 'space-around'}}>
+                            <a
+                                style={{
+                                    color: '#fff'
                                 }}
-                                size={"small"}
-                                bgColorMonthActive={"#000"}
-                                bgColorPicker={"#221E22"}
-                                bgColorMonthHover={"#000"}
-                                textColor={"#fff"}
-                            />
+                                href="#"
+                                onClick={e => {
+                                    e.preventDefault();
+                                    cal.previous();
+                                }}
+                            >
+                                ← Previous
+                            </a>
+                            <a
+                                style={{
+                                    color: '#fff'
+                                }}
+                                href="#"
+                                onClick={e => {
+                                    e.preventDefault();
+                                    cal.next();
+                                }}
+                            >
+                                Next →
+                            </a>
                         </div>
-                    ) : null}
-                    <BarChart width={800} height={hsz} data={dailyRegister}>
-                        <CartesianGrid strokeDasharray="1 1" />
-                        <XAxis
-                            dataKey="date"
-                        />
-                        <YAxis label={{ value: 'Time (minutes)', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip
-                            contentStyle={{ backgroundColor: '#252525' }}
-                        />
-
-                        <Legend verticalAlign="top" height={36} />
-                        <Bar dataKey="Youtube" fill="#ff0000" name={'Youtube'} stackId={'a'} />
-                        <Bar dataKey="Podcast" fill="#709BA2" name={'Podcast'} stackId={'a'} />
-                        <Bar dataKey="books_history" fill="#FBDECF" name={'Books'} stackId={'a'} />
-                        <Bar dataKey="talk" fill="#872BF4" name={'Talks'} stackId={'a'} />
-                        <Bar dataKey="anki" fill="#0988DF" name={'Anki'} stackId={'a'} />
-
-                    </BarChart>
+                    </div>
                 </Chart>
             </Charts>
             <Charts>
@@ -1296,13 +1235,12 @@ export function Home() {
                     <div>
                         Hours By Month
                         <LineChart width={wsz} height={hsz} data={chartMonthHour}>
-                            <XAxis dataKey="monthYear" />
+                            <XAxis dataKey="month" />
                             <YAxis />
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#252525' }}
                                 labelFormatter={(value) => {
-                                    const [month, year] = value.split('/');
-                                    const date = new Date(`${year}-${month}-01`);
+                                    const date = new Date(value);
                                     return date.toLocaleDateString(userLocale, {
                                         month: 'long',
                                         year: 'numeric',
@@ -1310,7 +1248,7 @@ export function Home() {
                                 }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="totalTime" name="Hours By Month" stroke="#8884d8" />
+                            <Line type="monotone" dataKey="duration" name="Hours By Month" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
