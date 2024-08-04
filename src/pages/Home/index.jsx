@@ -1,7 +1,5 @@
 import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form, Filter } from './styles';
 
-import axios from 'axios';
-
 import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 import { Header } from '../../components/Header';
 import { Input } from '../../components/Input/index.jsx';
@@ -27,20 +25,13 @@ dayjs.extend(duration);
 
 import { useState, useEffect } from 'react';
 import {
-    CartesianGrid,
-    BarChart,
     Line,
-    Bar,
     LineChart,
     Tooltip,
     XAxis,
     YAxis,
     Legend,
-    ResponsiveContainer,
-    Area,
 } from 'recharts';
-import HeatMap from '@uiw/react-heat-map';
-import ToolTipHeatMap from '@uiw/react-tooltip';
 
 import { api } from '../../services/api.js';
 
@@ -49,8 +40,6 @@ import close from '../../assets/close.svg';
 
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
-import Axios from 'axios';
-import { setupCache } from 'axios-cache-interceptor';
 import { Footer } from '../../components/Footer/index.jsx';
 
 import { CircularProgressbar } from 'react-circular-progressbar';
@@ -59,14 +48,11 @@ import 'react-circular-progressbar/dist/styles.css';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import Confetti from 'react-confetti';
 
-import { MonthPicker, MonthInput } from 'react-lite-month-picker';
 import MoonLoader from "react-spinners/MoonLoader";
 import iso6391 from 'iso-639-1';
 
 import CalHeatmap from 'cal-heatmap';
 import Tooltips from 'cal-heatmap/plugins/Tooltip';
-import Legends from 'cal-heatmap/plugins/Legend';
-import CalendarLabel from 'cal-heatmap/plugins/CalendarLabel';
 
 const cal = new CalHeatmap()
 
@@ -96,9 +82,6 @@ export function Home() {
         vocabularyWhen: '',
         targetLanguage: '',
     };
-
-    const instance = Axios.create();
-    const axiosCache = setupCache(instance);
 
     const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
 
@@ -254,6 +237,29 @@ export function Home() {
         })
 
         setChartMonthHour(parsedDurationMonth)
+
+        let cumulativeHours = 0;
+        const hourCumulative = response.month_report.map((item) => {
+            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
+            const monthItem = new Date(item.month.split('T')[0])
+            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
+                month: 'long',
+                year: 'numeric',
+            });
+
+            cumulativeHours += durationNew
+
+            return {
+                month: parsedMonth,
+                duration: cumulativeHours
+            }
+        })
+
+        setChartMonthCumulative(hourCumulative)
+        console.log(hourCumulative)
+
+        setChartMonthHour(parsedDurationMonth)
         setHeatMapStartdate(response.user.created_at)
         setHeatMap(response.daily_report)
 
@@ -362,7 +368,7 @@ export function Home() {
             return itemDate === today
         })
 
-        setDailyGoalDid(dailyGoalTime[0].count)
+        setDailyGoalDid(dailyGoalTime[0]?.count || 0)
 
         let totalMinutes = 0
         response.daily_report.map((item) => {
@@ -405,7 +411,7 @@ export function Home() {
                     Tooltips,
                     {
                         text: function(date, value, dayjsDate) {
-                            return (
+                                return (
                                 (value ? value + ' Minutes' : '0  Minutes 😔') + ' on ' + dayjsDate.format('LL')
                             )
                         }
@@ -1104,7 +1110,7 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Your Streak</h5> <p>{streak}</p>
+                            <h5>Your Biggest Streak</h5> <p>{streak}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -1261,7 +1267,7 @@ export function Home() {
                     <div>
                         Total Hours
                         <LineChart width={wsz} height={hsz} data={chartMonthCumulative}>
-                            <XAxis dataKey="monthYear" scale={'point'} />
+                            <XAxis dataKey="month" scale={'point'} />
                             <YAxis />
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#252525' }}
@@ -1275,7 +1281,7 @@ export function Home() {
                                 }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="totalTime" name="Total Hours" stroke="#8884d8" />
+                            <Line type="monotone" dataKey="duration" name="Total Hours" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
