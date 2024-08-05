@@ -48,7 +48,7 @@ export function SignUp() {
 
         api.post('/v1/users', data)
             .then((response) => {
-                setSuccessMessage('Account Created! Verify your email!');
+                setSuccessMessage('Account Created! Please check your email (including spam/junk folders) to verify your account. It might take a few minutes to arrive.');
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 2500);
