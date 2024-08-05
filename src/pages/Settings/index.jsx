@@ -22,7 +22,7 @@ export function Settings() {
     const [awp, setAwp] = useState(0);
 
     async function getUser() {
-        api.get('/v1/users').then((response) => {
+        api.get('/v1/user/settings').then((response) => {
             setLanguage(response.data.configs.TL);
             setWpm(response.data.configs.wpm);
             setAwp(response.data.configs.averageWordsPage);

@@ -1,12 +1,11 @@
 import { Card, Chart, Charts, CreateSection, Journey, Modal, Overlay, Status, Top, Form, Filter } from './styles';
 
-import axios from 'axios';
-
 import { JourneyCard } from '../../components/JourneyCard/index.jsx';
 import { Header } from '../../components/Header';
 import { Input } from '../../components/Input/index.jsx';
 import { Button } from '../../components/Button/index.jsx';
 import { Flash } from '../../components/Flash/';
+import 'cal-heatmap/cal-heatmap.css';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, Pagination, A11y } from 'swiper/modules';
@@ -19,23 +18,20 @@ import 'swiper/css/pagination';
 
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
+import duration from 'dayjs/plugin/duration';
+
 dayjs.extend(isBetween);
+dayjs.extend(duration);
 
 import { useState, useEffect } from 'react';
 import {
-    CartesianGrid,
-    BarChart,
     Line,
-    Bar,
     LineChart,
     Tooltip,
     XAxis,
     YAxis,
     Legend,
-    ResponsiveContainer,
 } from 'recharts';
-import HeatMap from '@uiw/react-heat-map';
-import ToolTipHeatMap from '@uiw/react-tooltip';
 
 import { api } from '../../services/api.js';
 
@@ -44,8 +40,6 @@ import close from '../../assets/close.svg';
 
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css';
-import Axios from 'axios';
-import { setupCache } from 'axios-cache-interceptor';
 import { Footer } from '../../components/Footer/index.jsx';
 
 import { CircularProgressbar } from 'react-circular-progressbar';
@@ -54,9 +48,13 @@ import 'react-circular-progressbar/dist/styles.css';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import Confetti from 'react-confetti';
 
-import { MonthPicker, MonthInput } from 'react-lite-month-picker';
 import MoonLoader from "react-spinners/MoonLoader";
 import iso6391 from 'iso-639-1';
+
+import CalHeatmap from 'cal-heatmap';
+import Tooltips from 'cal-heatmap/plugins/Tooltip';
+
+const cal = new CalHeatmap()
 
 const wsz = 320;
 const hsz = 320;
@@ -80,13 +78,11 @@ export function Home() {
         bookHow: 'Active',
         bookNewTitle: '',
         bookNewPages: '',
+        bookHowLong: '',
         vocabularyNew: '',
         vocabularyWhen: '',
         targetLanguage: '',
     };
-
-    const instance = Axios.create();
-    const axiosCache = setupCache(instance);
 
     const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
 
@@ -116,6 +112,7 @@ export function Home() {
     const [vocabulary, setVocabulary] = useState(0);
 
     const [mediasWords, setMediasWords] = useState(0);
+    const [mediasTime, setMediasTime] = useState('00:00:00')
 
     const [booksWords, setBooksWords] = useState(0);
     const [booksTotalPages, setBooksTotalPages] = useState(0);
@@ -154,194 +151,140 @@ export function Home() {
         year: dayjs().year(),
     })
     const [orderedList, setOrderedList] = useState([])
-    const [language, setLanguage] = useState([])
+    const [languages, setLanguages] = useState([])
     const [addNewLanguage, setAddNewLanguage] = useState()
 
     async function getInfoUser() {
-        axios
-            .all([
-                api.get('/v1/users/user'),
-                api.get('/v1/vocabulary'),
-                api.get('/v1/books'),
-                api.get('/v1/talk'),
-                api.get('/v1/users'),
-            ])
-            .then(
-                axios.spread((userResponse, vocabularyResponse, booksResponse, talkResponse, userConfigs) => {
-                    const response = userResponse;
-                    const user = userConfigs;
-                    const vocabulary = vocabularyResponse;
-                    const books = booksResponse;
-                    const talk = talkResponse;
+        let response = await api.get("/v1/user")
+        response = response.data
 
-                    setBookList(books.data.books);
-                    setOrderedList(response)
-                    setLanguage(response.data.usedLanguages)
+        // book
+        setBooks(response.books.books.length)
+        setBookList(response.books.books)
+        setBooksTotalTime(response.books.totalTimeBooks)
+        setBooksWords(response.books.totalBooksWords)
+        setBooksHistory(response.books.booksLastHistory)
+        setBooksTotalPages(response.books.totalBooksPages)
 
-                    setTotalTime(response.data.totalTime);
-                    setStreak(response.data.streak.currentStreak);
-                    setLongestStreak(response.data.streak.longestStreak);
+        // medias
+        setMediasWords(response.medias.totalWordCount)
+        setTotalTitmeYTBPD(response.medias.time)
 
-                    setVocabularyAverage(vocabulary.data.average);
-                    const totalVocabulary = vocabulary.data.vocabulary.length
-                        ? vocabulary.data.vocabulary[vocabulary.data.vocabulary.length - 1].vocabulary || 0
-                        : 0;
-                    setVocabulary(totalVocabulary);
+        //talk
+        setTalk(response.talk.output.length)
+        setTalkTotalTime(response.talk.outputTotalTime)
+        setTalkAverage(response.talk.averageTime)
+        setTalkStreak(response.talk.outputStreak.currentStreak)
 
-                    setMediasWords(response.data.totalWordsMedia);
-                    setTotalTitmeYTBPD(response.data.mediasTotalTime);
+        // vocabulary
+        setVocabularyAverage(response.vocabulary.average)
+        setVocabulary(response.vocabulary.vocabulary.length)
 
-                    setBooksWords(books.data.totalBooksWords);
-                    setBooksTotalPages(books.data.totalBooksPages);
-                    setBooksTotalTime(books.data.totalTimeBooks);
-                    setBooks(books.data.books.length);
-                    setBooksHistory(books.data.booksLastHistory);
+        const ordered = [...response.anki.anki, ...response.books.booksHistory, ...response.medias.videos, ...response.talk.output, ...response.vocabulary.vocabulary].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
-                    setTalk(talk.data.output.length);
-                    setTalkTotalTime(talk.data.outputTotalTime);
-                    setTalkAverage(talk.data.averageTime);
-                    setTalkStreak(talk.data.outputStreak.currentStreak);
+        setOrderedList(ordered)
+        setListJourney(ordered);
+        setListJourneyWithoutFilter(ordered);
 
-                    setListJourney(response.data.ordered);
-                    setListJourneyWithoutFilter(response.data.ordered);
+        let daysStreak = 0
+        let bigStreak = 0
+        let daysOfImersion = 0
+        for (let i = 1; i < ordered.length; i++) {
+            const splited = ordered[i].created_at.split("T")[0];
+            const splitedP1 = new Date(splited);
 
-                    setDaysOfImmersion(response.data.heatMap.length);
+            const splitb = ordered[i - 1].created_at.split("T")[0];
+            const splitbP1 = new Date(splitb);
 
-                    const heatMapStart = new Date(response.data.heatMap[0].date);
-                    setHeatMapStartdate(heatMapStart);
-                    setHeatMap(response.data.heatMap);
+            const diffInTime = Math.abs(splitedP1 - splitbP1);
+            const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
 
-                    const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-                    const todayGoal = response.data.heatMap.filter((entry) => entry.date === today);
-                    setDailyGoal(user.data.configs.dailyGoal);
-                    if (todayGoal && todayGoal.length > 0) {
-                        setDailyGoalDid(todayGoal[0].count || 0);
-                    } else {
-                        setDailyGoalDid(0);
-                    }
+            if (diffInDays === 1) {
+                daysStreak++;
+                daysOfImersion++
+            } else {
+                if (splitb !== splited) {
+                    daysOfImersion++
+                    daysStreak = 1;
+                }
+            }
 
-                    if (dailyGoalDid >= user.data.configs.dailyGoal) {
-                        setConfetti(true);
-                    }
-                    setChartMonthHour(response.data.hoursByMonth.reverse());
-                    const cumulativeHours = [];
-                    let cumulativeSum = 0;
+            if (daysStreak > bigStreak) {
+                bigStreak = daysStreak;
+            }
+        }
+        setStreak(daysStreak)
+        setLongestStreak(bigStreak)
+        setDaysOfImmersion(daysOfImersion);
 
-                    const dailyRegisterDate = response.data.ordered.filter((item) => {
-                        const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
-                        const itemDate = dayjs(itemDateFormatted)
-                        const startOfCurrentMonth = dayjs().startOf('month');
-                        const endOfCurrentMonth = dayjs().endOf('month');
-
-                        return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
-                    });
-
-                    const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
-
-                    const dailyDetails = {};
-
-                    const firstDayOfMonth = dayjs().startOf('month');
-
-                    const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
-
-                    for (let i = 0; i < daysUntilToday; i++) {
-                        const currentDate = firstDayOfMonth.add(i, 'day');
-                        const formattedDate = currentDate.format('MM/DD/YYYY');
-                        dailyDetails[formattedDate] = {};
-                    }
-
-                    dailyRegisterDate.forEach(element => {
-                        const day = dayjs(element.created_at).format('MM/DD/YYYY');
-
-                        if (!dailyDetails[day]) {
-                            dailyDetails[day] = {};
-                        }
-
-                        if (!dailyDetails[day][element.source]) {
-                            dailyDetails[day][element.source] = {
-                                activity: [],
-                                totalMinutes: 0,
-                            };
-                        }
-
-                        dailyDetails[day][element.source].activity.push(element);
-
-                        if (element.source === 'books_history' && element.time_diff) {
-                            const timeSplited = element.time_diff.split(':')
-                            const hours = parseInt(timeSplited[0]);
-                            const minutes = parseInt(timeSplited[1]);
-                            const seconds = parseInt(timeSplited[2]);
-                            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
-
-                            dailyDetails[day][element.source].totalMinutes += totalMinutes;
-                            return
-                        }
-                        const timeSplited = element.time.split(':');
-                        const hours = parseInt(timeSplited[0]);
-                        const minutes = parseInt(timeSplited[1]);
-                        const seconds = parseInt(timeSplited[2]);
-                        const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
-
-                        dailyDetails[day][element.source].totalMinutes += totalMinutes;
-                    });
-
-
-                    const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
-                        date: key,
-                        minutes: dailyDetails[key],
-                    }));
-
-                    const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
-                        const date = dayjs(item.date).format('MM/DD/YYYY');
-                        const minutes = item.minutes;
-                        const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
-                        return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
-                    });
-
-                    setDailyRegister(dailyMinutesSeparated)
-
-                    for (let i = 0; i < response.data.hoursByMonth.length; i++) {
-                        const currentMonthYear = response.data.hoursByMonth[i].monthYear;
-                        const currentTotalTime = response.data.hoursByMonth[i].totalTime;
-
-                        cumulativeSum += currentTotalTime;
-
-                        const cumulativeObject = {
-                            monthYear: currentMonthYear,
-                            totalTime: cumulativeSum,
-                        };
-
-                        cumulativeHours.push(cumulativeObject);
-                    }
-
-                    setChartMonthCumulative(cumulativeHours);
-                }),
-            )
-            .catch((error) => {
-                console.error('Error:', error);
+        const parsedDurationMonth = response.month_report.map((item) => {
+            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
+            const monthItem = new Date(item.month.split('T')[0])
+            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
+                month: 'long',
+                year: 'numeric',
             });
-    }
+            return {
+                month: parsedMonth,
+                duration: durationNew
+            }
+        })
 
-    function handleDailyRegister() {
-        const ordered = orderedList.data.ordered
+        setChartMonthHour(parsedDurationMonth)
+
+        let cumulativeHours = 0;
+        const hourCumulative = response.month_report.map((item) => {
+            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
+            const monthItem = new Date(item.month.split('T')[0])
+            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
+                month: 'long',
+                year: 'numeric',
+            });
+
+            cumulativeHours += durationNew
+
+            return {
+                month: parsedMonth,
+                duration: cumulativeHours
+            }
+        })
+
+        setChartMonthCumulative(hourCumulative)
+
+        setChartMonthHour(parsedDurationMonth)
+        setHeatMapStartdate(response.user.created_at)
+        setHeatMap(response.daily_report)
+
+        const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+        const todayGoal = response.daily_report.filter((entry) => entry.date === today);
+        setDailyGoal(response.user.configs.dailyGoal);
+        if (todayGoal && todayGoal.length > 0) {
+            setDailyGoalDid(todayGoal[0].count || 0);
+        } else {
+            setDailyGoalDid(0);
+        }
 
         const dailyRegisterDate = ordered.filter((item) => {
-            const itemDate = dayjs(item.created_at).format('MM/DD/YYYY');
-            const itemDateFormatted = dayjs(itemDate)
-            const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
-            const endOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).endOf('month')
+            const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
+            const itemDate = dayjs(itemDateFormatted)
+            const startOfCurrentMonth = dayjs().startOf('month');
+            const endOfCurrentMonth = dayjs().endOf('month');
 
-            return itemDateFormatted.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
+            return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
         });
 
-        const activities = ["Youtube", "Podcast", "books_history", "books", "anki", "talk", "vocabulary"];
+        const activities = ["Youtube", "books_history", "Books", "Anki", "Talk", "Vocabulary"];
 
         const dailyDetails = {};
 
-        const startOfCurrentMonth = dayjs(`${selectedMonthData.month}/01/${selectedMonthData.year}`).startOf('month');
+        const firstDayOfMonth = dayjs().startOf('month');
 
-        for (let i = 0; i < 30; i++) {
-            const currentDate = startOfCurrentMonth.add(i, 'day');
+        const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
+
+        for (let i = 0; i < daysUntilToday; i++) {
+            const currentDate = firstDayOfMonth.add(i, 'day');
             const formattedDate = currentDate.format('MM/DD/YYYY');
             dailyDetails[formattedDate] = {};
         }
@@ -362,7 +305,17 @@ export function Home() {
 
             dailyDetails[day][element.source].activity.push(element);
 
-            const timeSplited = element.time.split(':');
+            if (element.source === 'BooksHistory' && element.time_diff) {
+                const timeSplited = element.time_diff.split(':')
+                const hours = parseInt(timeSplited[0]);
+                const minutes = parseInt(timeSplited[1]);
+                const seconds = parseInt(timeSplited[2]);
+                const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
+
+                dailyDetails[day][element.source].totalMinutes += totalMinutes;
+                return
+            }
+            const timeSplited = element.time?.split(':') || [0, 0, 0];
             const hours = parseInt(timeSplited[0]);
             const minutes = parseInt(timeSplited[1]);
             const seconds = parseInt(timeSplited[2]);
@@ -378,13 +331,87 @@ export function Home() {
         }));
 
         const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
-            const date = item.date;
+            const date = dayjs(item.date).format('MM/DD/YYYY');
             const minutes = item.minutes;
             const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
             return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
         });
 
+        const languages = []
         setDailyRegister(dailyMinutesSeparated)
+        ordered.forEach((item) => {
+            if (item.target_language && !languages.includes(item.target_language)) {
+                languages.push(item.target_language);
+            }
+        });
+
+        if (languages.length == 0) {
+            languages.push(response.user.configs.TL)
+        }
+
+        if (!formData.targetLanguage) {
+            formData.targetLanguage = response.user.configs.TL
+        }
+
+        setLanguages(languages)
+
+        const dailyGoalTime = response.daily_report.filter((item) => {
+            const itemDate = dayjs(item.date).add(+1, "day").format('DD/MM/YYYY')
+            const today = dayjs().format('DD/MM/YYYY')
+
+            return itemDate === today
+        })
+
+        setDailyGoalDid(dailyGoalTime[0]?.count || 0)
+
+        let totalMinutes = 0
+        response.daily_report.map((item) => {
+            totalMinutes += item.count
+
+        })
+        const hours = Math.floor(totalMinutes / 60);
+        const remainingMinutes = totalMinutes % 60;
+        const totalTimeF = `${hours}h ${remainingMinutes}m`;
+
+        setTotalTime(totalTimeF)
+
+        cal.paint({
+            data: {
+                source: response.daily_report,
+                type: 'json',
+                x: (datum) => new Date(datum.date),
+                y: (datum) => datum.count
+            },
+            scale: {
+                color: {
+                    type: 'threshold',
+                    range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                    domain: [10, 20, 30, 60],
+                },
+            },
+            date: {
+                start: dayjs().format("YYYY")
+            },
+            domain: {
+                type: "month",
+                label: { text: 'MMM', textAlign: 'start', position: 'top' },
+            },
+            subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
+            itemSelector: "#heatmap",
+            theme: "dark",
+        },
+            [
+                [
+                    Tooltips,
+                    {
+                        text: function(date, value, dayjsDate) {
+                            return (
+                                (value ? value + ' Minutes' : '0  Minutes 😔') + ' on ' + dayjsDate.format('LL')
+                            )
+                        }
+                    }
+                ]
+            ])
     }
 
     function handleSubmit(e) {
@@ -423,16 +450,9 @@ export function Home() {
 
             api.post('/v1/medias', data)
                 .then((response) => {
-                    if (response.data.closed_caption) {
-                        setSuccessMessage('Youtube Created with Success');
-                        setIsLoading(false);
-                        clearMessage();
-                    } else {
-                        setSuccessMessage('Youtube Created with Success');
-                        setInfoMessage('The YouTube does not include subtitles.');
-                        setIsLoading(false);
-                        clearMessage(4000);
-                    }
+                    setSuccessMessage('Youtube Created with Success');
+                    setIsLoading(false);
+                    clearMessage();
                 })
                 .catch((e) => {
                     setErrorMessage('Failed, Try Again');
@@ -447,9 +467,9 @@ export function Home() {
             setIsLoading(true);
 
             const data = {
-                reviewed: formData.ankiReviewed,
-                newCards: formData.ankiNew,
-                time: formData.ankiLong,
+                reviewed: Number(formData.ankiReviewed),
+                newCards: Number(formData.ankiNew),
+                time: Number(formData.ankiLong),
                 target_language: targetLanguage,
             };
 
@@ -513,11 +533,6 @@ export function Home() {
                 target_language: targetLanguage,
             };
 
-            if (!data.time || !Number.isInteger(data.time)) {
-                setErrorMessage('Please, insert the time in minutes in the field "How Long"');
-                clearMessage();
-                return;
-            }
             api.post('/v1/talk', data)
                 .then((response) => {
                     setSuccessMessage('Talk Created with success!');
@@ -525,7 +540,7 @@ export function Home() {
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Failed, try again later');
+                    setErrorMessage(e.response.data.error);
                     setIsLoading(false);
                     clearMessage();
                 }).finally(() => {
@@ -572,10 +587,11 @@ export function Home() {
                 const data = {
                     read_type: formData.bookHow,
                     read_pages: Number(bookPages),
+                    time: Number(formData.bookHowLong),
                     target_language: targetLanguage,
                 };
 
-                if (!data.read_pages || !data.read_type) {
+                if (!data.read_pages || !data.read_type || !data.time) {
                     setErrorMessage('All The fields are required');
                     clearMessage();
                     return;
@@ -607,19 +623,18 @@ export function Home() {
             setIsLoading(true);
 
             const data = {
-                vocabulary: formData.vocabularyNew,
-                date: formData.vocabularyWhen,
+                vocabulary: Number(formData.vocabularyNew),
                 target_language: targetLanguage,
             };
 
             api.post('/v1/vocabulary', data)
                 .then((r) => {
-                    setSuccessMessage('Vocabulary Created with success!');
+                    setSuccessMessage(r.data);
                     clearMessage();
                     setIsLoading(false);
                 })
                 .catch((e) => {
-                    setErrorMessage('Failed, Try again later');
+                    setErrorMessage(e.response.data.error);
                     setIsLoading(false);
                     clearMessage();
                 }).finally(() => {
@@ -629,56 +644,56 @@ export function Home() {
     }
 
     function handleDelete(source, id) {
-        if (source == 'Podcast' || source == 'Youtube') {
+        if (source == 'Podcast' || source == 'Youtube' || source == "Medias") {
             api.delete(`/v1/medias/${id}`)
                 .then((response) => {
-                    setInfoMessage('Media Deleted With Success!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'anki') {
+        if (source == 'Anki') {
             api.delete(`/v1/anki/${id}`)
                 .then((response) => {
-                    setInfoMessage('Anki Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'talk') {
+        if (source == 'Talk') {
             api.delete(`/v1/talk/${id}`)
                 .then((response) => {
-                    setInfoMessage('Conversation Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'vocabulary') {
+        if (source == 'Vocabulary') {
             api.delete(`/v1/vocabulary/${id}`)
                 .then((response) => {
-                    setInfoMessage('Vocabulary Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
@@ -733,14 +748,16 @@ export function Home() {
         const userName = localStorage.getItem('@username');
 
         setUsername(userName);
+
     }, []);
 
     function updateBookPages(selected) {
         const selectedBook = bookList.filter((book) => {
             return book.title == selected;
-        });
+        })[0]
+
         if (selectedBook) {
-            const history = booksHistory.filter((book) => book.id_book === selectedBook[0].id);
+            const history = booksHistory.filter((book) => book.id_book === selectedBook.id);
             setEditBook(history[0].id_book);
             setBookPages(history[0].actual_page);
         }
@@ -831,7 +848,6 @@ export function Home() {
                                 <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
                                     <option value="Youtube">Youtube</option>
                                     <option value="Podcast">Podcast (Only in Youtube)</option>
-                                    <option value="Movie">Movie</option>
                                     <option value="Talk">Talk</option>
                                     <option value="Anki">Anki</option>
                                     <option value="Read">Read</option>
@@ -972,13 +988,23 @@ export function Home() {
                                                     <option value="Passive">Passive</option>
                                                 </select>
                                             </div>
-                                            <Input
-                                                type={'number'}
-                                                label={'What is your current page?'}
-                                                placeholder={'Only Numbers'}
-                                                onChange={(e) => setBookPages(e.target.value)}
-                                                value={bookPages}
-                                            />
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <Input
+                                                    type={'number'}
+                                                    label={'What is your current page?'}
+                                                    placeholder={'Only Numbers'}
+                                                    onChange={(e) => setBookPages(e.target.value)}
+                                                    value={bookPages}
+                                                />
+                                                <Input
+                                                    type={'number'}
+                                                    name="bookHowLong"
+                                                    label={'For how long time? (Minutes)'}
+                                                    placeholder={'In Minutes'}
+                                                    value={formData.bookHowLong}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
                                         </>
                                     )}
                                     {currentBook == 'new' && (
@@ -1013,13 +1039,6 @@ export function Home() {
                                         value={formData.vocabularyNew}
                                         onChange={handleInputChange}
                                     />
-                                    <Input
-                                        type="date"
-                                        name="vocabularyWhen"
-                                        label="When?"
-                                        value={formData.vocabularyWhen}
-                                        onChange={handleInputChange}
-                                    />
                                 </>
                             )}
                             <div>
@@ -1030,11 +1049,15 @@ export function Home() {
                                         setAddNewLanguage(!addNewLanguage)
                                     }
                                 }} value={formData.targetLanguage}>
-                                    {language.map((item, index) => {
-                                        return (
-                                            <option value={item.code} key={index}>{item.languageName}</option>
+                                    {
+                                        languages && (
+                                            languages.map((item, index) => (
+                                                <option key={index} value={item}>
+                                                    {iso6391.getName(item)}
+                                                </option>
+                                            ))
                                         )
-                                    })}
+                                    }
                                     <option value={'newLanguage'}>Add a new Language</option>
                                     <option disabled>You can choose the default in Settings {'>'} Target Language</option>
                                     {
@@ -1076,12 +1099,13 @@ export function Home() {
                 >
                     <SwiperSlide>
                         <Card>
-                            <h5>Total Vocabulary</h5> <p>{vocabulary}</p>
+                            <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
+                            <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Your Streak</h5> <p>{streak}</p>
+                            <h5>Your Biggest Streak</h5> <p>{streak}</p>
                         </Card>
                     </SwiperSlide>
                     <SwiperSlide>
@@ -1164,101 +1188,42 @@ export function Home() {
                         borderBottomLeftRadius: 8,
                     }}
                 >
-                    <div style={{ width: 200, height: 200 }}>
-                        <h4 style={{ textAlign: 'center' }}>Your Daily goal is {dailyGoal} min, you did</h4>
-                        <CircularProgressbar value={dailyGoalDid} maxValue={dailyGoal} text={`${dailyGoalDid} min`} />
-                    </div>
-                </Chart>
-                <Chart
-                    style={{
-                        borderTopRightRadius: 8,
-                        borderBottomRightRadius: 8,
-                    }}
-                >
-                    <div>
-                        <h4 style={{ textAlign: 'center' }}>Your Heat Map</h4>
-                        <HeatMap
-                            value={heatMap}
-                            weekLabels={['', 'Mon', '', 'Wed', '', 'Fri', '']}
-                            rectSize={16}
-                            startDate={heatMapStartDate}
-                            endDate={new Date()}
-                            style={{ color: 'white' }}
-                            legendRender={(props) => <rect {...props} y={props.y + 10} rx={5} />}
-                            rectProps={{
-                                rx: 5,
-                            }}
-                            panelColors={{
-                                0: '#222222',
-                                1: '#221e22',
-                                10: '#14532d',
-                                30: '#166534',
-                                40: '#166534',
-                                60: '#15803d',
-                                120: '#16a34a',
-                            }}
-                            rectRender={(props, data) => {
-                                return (
-                                    <ToolTipHeatMap
-                                        placement="top"
-                                        content={`Time ${data.date}: ${data.count || 0} minutes`}
-                                    >
-                                        <rect {...props} />
-                                    </ToolTipHeatMap>
-                                );
-                            }}
-                        />
-                    </div>
-                </Chart>
-            </Charts>
-            <Charts>
-                <Chart style={{ overflowX: 'auto', display: 'flex', alignItems: 'center' }}>
-                    <MonthInput
-                        selected={selectedMonthData}
-                        setShowMonthPicker={setIsPickerOpen}
-                        showMonthPicker={isPickerOpen}
-                        bgColor={"#221E22"}
-                        bgColorHover={"#000"}
-                        textColor={"#fff"}
-                        size={"small"}
-                    />
-                    {isPickerOpen ? (
-                        <div
-                            style={{ zIndex: '100000', width: '100%' }}
-                        >
-                            <MonthPicker
-                                setIsOpen={setIsPickerOpen}
-                                selected={selectedMonthData}
-                                onChange={(e) => {
-                                    setSelectedMonthData(e);
-                                    handleDailyRegister();
+                    <div style={{
+                        overflow: 'auto',
+                        alignItems: 'stretch',
+                        width: '100%',
+                    }}>
+                        <h4 style={{ textAlign: 'center', float: 'left' }}>Your Heat Map</h4>
+                        <div id='heatmap' style={{
+                            margin: '0 auto'
+                        }}></div>
+                        <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
+                            <a
+                                style={{
+                                    color: '#fff'
                                 }}
-                                size={"small"}
-                                bgColorMonthActive={"#000"}
-                                bgColorPicker={"#221E22"}
-                                bgColorMonthHover={"#000"}
-                                textColor={"#fff"}
-                            />
+                                href="#"
+                                onClick={e => {
+                                    e.preventDefault();
+                                    cal.previous();
+                                }}
+                            >
+                                ← Previous
+                            </a>
+                            <a
+                                style={{
+                                    color: '#fff'
+                                }}
+                                href="#"
+                                onClick={e => {
+                                    e.preventDefault();
+                                    cal.next();
+                                }}
+                            >
+                                Next →
+                            </a>
                         </div>
-                    ) : null}
-                    <BarChart width={800} height={hsz} data={dailyRegister}>
-                        <CartesianGrid strokeDasharray="1 1" />
-                        <XAxis
-                            dataKey="date"
-                        />
-                        <YAxis label={{ value: 'Time (minutes)', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip
-                            contentStyle={{ backgroundColor: '#252525' }}
-                        />
-
-                        <Legend verticalAlign="top" height={36} />
-                        <Bar dataKey="Youtube" fill="#ff0000" name={'Youtube'} stackId={'a'} />
-                        <Bar dataKey="Podcast" fill="#709BA2" name={'Podcast'} stackId={'a'} />
-                        <Bar dataKey="books_history" fill="#FBDECF" name={'Books'} stackId={'a'} />
-                        <Bar dataKey="talk" fill="#872BF4" name={'Talks'} stackId={'a'} />
-                        <Bar dataKey="anki" fill="#0988DF" name={'Anki'} stackId={'a'} />
-
-                    </BarChart>
+                    </div>
                 </Chart>
             </Charts>
             <Charts>
@@ -1271,13 +1236,12 @@ export function Home() {
                     <div>
                         Hours By Month
                         <LineChart width={wsz} height={hsz} data={chartMonthHour}>
-                            <XAxis dataKey="monthYear" />
+                            <XAxis dataKey="month" />
                             <YAxis />
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#252525' }}
                                 labelFormatter={(value) => {
-                                    const [month, year] = value.split('/');
-                                    const date = new Date(`${year}-${month}-01`);
+                                    const date = new Date(value);
                                     return date.toLocaleDateString(userLocale, {
                                         month: 'long',
                                         year: 'numeric',
@@ -1285,7 +1249,7 @@ export function Home() {
                                 }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="totalTime" name="Hours By Month" stroke="#8884d8" />
+                            <Line type="monotone" dataKey="duration" name="Hours By Month" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
@@ -1298,7 +1262,7 @@ export function Home() {
                     <div>
                         Total Hours
                         <LineChart width={wsz} height={hsz} data={chartMonthCumulative}>
-                            <XAxis dataKey="monthYear" scale={'point'} />
+                            <XAxis dataKey="month" scale={'point'} />
                             <YAxis />
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#252525' }}
@@ -1312,7 +1276,7 @@ export function Home() {
                                 }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="totalTime" name="Total Hours" stroke="#8884d8" />
+                            <Line type="monotone" dataKey="duration" name="Total Hours" stroke="#8884d8" />
                         </LineChart>
                     </div>
                 </Chart>
@@ -1329,10 +1293,10 @@ export function Home() {
                                 <option value="Youtube">Youtube</option>
                                 <option value="Podcast">Podcast</option>
                                 <option value="Movie">Movie</option>
-                                <option value="talk">Talk</option>
-                                <option value="anki">Anki</option>
-                                <option value="books">Read</option>
-                                <option value="vocabulary">Vocabulary Test</option>
+                                <option value="Talk">Talk</option>
+                                <option value="Anki">Anki</option>
+                                <option value="Books">Read</option>
+                                <option value="Vocabulary">Vocabulary Test</option>
                             </select>
                         </section>
                         <section>
