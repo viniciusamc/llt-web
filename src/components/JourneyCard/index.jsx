@@ -14,9 +14,9 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
 
     const languageName = iso6391.getName(tl);
 
-    if (icon === 'vocabulary') {
+    if (icon === 'Vocabulary') {
         cardIcon = vocabulary;
-    } else if (icon == 'talk') {
+    } else if (icon == 'Talk') {
         cardIcon = discord;
     } else if (icon == 'Medias' || icon == 'Video') {
         cardIcon = youtube;
@@ -28,6 +28,7 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
     } else if (icon == 'Podcast') {
         cardIcon = podcast
     } else {
+        title = "Book"
         cardIcon = book
     }
 

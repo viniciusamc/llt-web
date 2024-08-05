@@ -78,6 +78,7 @@ export function Home() {
         bookHow: 'Active',
         bookNewTitle: '',
         bookNewPages: '',
+        bookHowLong: '',
         vocabularyNew: '',
         vocabularyWhen: '',
         targetLanguage: '',
@@ -155,7 +156,6 @@ export function Home() {
 
     async function getInfoUser() {
         let response = await api.get("/v1/user")
-        console.log(response)
         response = response.data
 
         // book
@@ -165,11 +165,6 @@ export function Home() {
         setBooksWords(response.books.totalBooksWords)
         setBooksHistory(response.books.booksLastHistory)
         setBooksTotalPages(response.books.totalBooksPages)
-
-        //const totalTimeBooks = response.books.booksLastHistory.map((item) => {
-        //    console.log(item.time)
-        //})
-
 
         // medias
         setMediasWords(response.medias.totalWordCount)
@@ -257,7 +252,6 @@ export function Home() {
         })
 
         setChartMonthCumulative(hourCumulative)
-        console.log(hourCumulative)
 
         setChartMonthHour(parsedDurationMonth)
         setHeatMapStartdate(response.user.created_at)
@@ -281,7 +275,7 @@ export function Home() {
             return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
         });
 
-        const activities = ["Youtube", "Podcast", "books_history", "Books", "Anki", "Talk", "Vocabulary"];
+        const activities = ["Youtube", "books_history", "Books", "Anki", "Talk", "Vocabulary"];
 
         const dailyDetails = {};
 
@@ -321,7 +315,7 @@ export function Home() {
                 dailyDetails[day][element.source].totalMinutes += totalMinutes;
                 return
             }
-            const timeSplited = element.time.split(':');
+            const timeSplited = element.time?.split(':') || [0, 0, 0];
             const hours = parseInt(timeSplited[0]);
             const minutes = parseInt(timeSplited[1]);
             const seconds = parseInt(timeSplited[2]);
@@ -411,7 +405,7 @@ export function Home() {
                     Tooltips,
                     {
                         text: function(date, value, dayjsDate) {
-                                return (
+                            return (
                                 (value ? value + ' Minutes' : '0  Minutes 😔') + ' on ' + dayjsDate.format('LL')
                             )
                         }
@@ -593,10 +587,11 @@ export function Home() {
                 const data = {
                     read_type: formData.bookHow,
                     read_pages: Number(bookPages),
+                    time: Number(formData.bookHowLong),
                     target_language: targetLanguage,
                 };
 
-                if (!data.read_pages || !data.read_type) {
+                if (!data.read_pages || !data.read_type || !data.time) {
                     setErrorMessage('All The fields are required');
                     clearMessage();
                     return;
@@ -615,7 +610,6 @@ export function Home() {
                         clearMessage();
                     })
                     .catch((e) => {
-                        console.log(e)
                         setErrorMessage(e.response.data.message);
                         setIsLoading(false);
                         clearMessage();
@@ -629,19 +623,18 @@ export function Home() {
             setIsLoading(true);
 
             const data = {
-                vocabulary: formData.vocabularyNew,
-                date: formData.vocabularyWhen,
+                vocabulary: Number(formData.vocabularyNew),
                 target_language: targetLanguage,
             };
 
             api.post('/v1/vocabulary', data)
                 .then((r) => {
-                    setSuccessMessage('Vocabulary Created with success!');
+                    setSuccessMessage(r.data);
                     clearMessage();
                     setIsLoading(false);
                 })
                 .catch((e) => {
-                    setErrorMessage('Failed, Try again later');
+                    setErrorMessage(e.response.data.error);
                     setIsLoading(false);
                     clearMessage();
                 }).finally(() => {
@@ -651,56 +644,56 @@ export function Home() {
     }
 
     function handleDelete(source, id) {
-        if (source == 'Podcast' || source == 'Youtube') {
+        if (source == 'Podcast' || source == 'Youtube' || source == "Medias") {
             api.delete(`/v1/medias/${id}`)
                 .then((response) => {
-                    setInfoMessage('Media Deleted With Success!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'anki') {
+        if (source == 'Anki') {
             api.delete(`/v1/anki/${id}`)
                 .then((response) => {
-                    setInfoMessage('Anki Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'talk') {
+        if (source == 'Talk') {
             api.delete(`/v1/talk/${id}`)
                 .then((response) => {
-                    setInfoMessage('Conversation Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
                 });
         }
 
-        if (source == 'vocabulary') {
+        if (source == 'Vocabulary') {
             api.delete(`/v1/vocabulary/${id}`)
                 .then((response) => {
-                    setInfoMessage('Vocabulary Deleted with Sucess!');
+                    setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage('Was not possible to delete this content, try again later');
+                    setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
@@ -855,7 +848,6 @@ export function Home() {
                                 <select name="modalValue" onChange={handleInputChange} value={formData.modalValue}>
                                     <option value="Youtube">Youtube</option>
                                     <option value="Podcast">Podcast (Only in Youtube)</option>
-                                    <option value="Movie">Movie</option>
                                     <option value="Talk">Talk</option>
                                     <option value="Anki">Anki</option>
                                     <option value="Read">Read</option>
@@ -996,13 +988,23 @@ export function Home() {
                                                     <option value="Passive">Passive</option>
                                                 </select>
                                             </div>
-                                            <Input
-                                                type={'number'}
-                                                label={'What is your current page?'}
-                                                placeholder={'Only Numbers'}
-                                                onChange={(e) => setBookPages(e.target.value)}
-                                                value={bookPages}
-                                            />
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <Input
+                                                    type={'number'}
+                                                    label={'What is your current page?'}
+                                                    placeholder={'Only Numbers'}
+                                                    onChange={(e) => setBookPages(e.target.value)}
+                                                    value={bookPages}
+                                                />
+                                                <Input
+                                                    type={'number'}
+                                                    name="bookHowLong"
+                                                    label={'For how long time? (Minutes)'}
+                                                    placeholder={'In Minutes'}
+                                                    value={formData.bookHowLong}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
                                         </>
                                     )}
                                     {currentBook == 'new' && (
@@ -1035,13 +1037,6 @@ export function Home() {
                                         label="How Much?"
                                         placeholder={'Total Vocabulary'}
                                         value={formData.vocabularyNew}
-                                        onChange={handleInputChange}
-                                    />
-                                    <Input
-                                        type="date"
-                                        name="vocabularyWhen"
-                                        label="When?"
-                                        value={formData.vocabularyWhen}
                                         onChange={handleInputChange}
                                     />
                                 </>
@@ -1202,7 +1197,7 @@ export function Home() {
                         <div id='heatmap' style={{
                             margin: '0 auto'
                         }}></div>
-                        <div style={{display: 'flex', flex: 1, justifyContent: 'space-around'}}>
+                        <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
                             <a
                                 style={{
                                     color: '#fff'
@@ -1298,10 +1293,10 @@ export function Home() {
                                 <option value="Youtube">Youtube</option>
                                 <option value="Podcast">Podcast</option>
                                 <option value="Movie">Movie</option>
-                                <option value="talk">Talk</option>
-                                <option value="anki">Anki</option>
-                                <option value="books">Read</option>
-                                <option value="vocabulary">Vocabulary Test</option>
+                                <option value="Talk">Talk</option>
+                                <option value="Anki">Anki</option>
+                                <option value="Books">Read</option>
+                                <option value="Vocabulary">Vocabulary Test</option>
                             </select>
                         </section>
                         <section>
