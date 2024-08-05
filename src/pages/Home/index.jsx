@@ -98,7 +98,7 @@ export function Home() {
     const [chartMonthHour, setChartMonthHour] = useState([]);
     const [heatMap, setHeatMap] = useState([]);
     const [dailyRegister, setDailyRegister] = useState([]);
-    const [heatMapStartDate, setHeatMapStartdate] = useState(new Date(2023));
+    const [heatMapStartDate, setHeatMapStartdate] = useState();
     const [chartMonthCumulative, setChartMonthCumulative] = useState([]);
 
     const [totalTime, setTotalTime] = useState('00:00:00');
@@ -112,7 +112,6 @@ export function Home() {
     const [vocabulary, setVocabulary] = useState(0);
 
     const [mediasWords, setMediasWords] = useState(0);
-    const [mediasTime, setMediasTime] = useState('00:00:00')
 
     const [booksWords, setBooksWords] = useState(0);
     const [booksTotalPages, setBooksTotalPages] = useState(0);
@@ -145,11 +144,6 @@ export function Home() {
     const [listJourney, setListJourney] = useState([]);
     const [listJourneyWithoutFilter, setListJourneyWithoutFilter] = useState([]);
 
-    const [isPickerOpen, setIsPickerOpen] = useState(false)
-    const [selectedMonthData, setSelectedMonthData] = useState({
-        month: dayjs().month() + 1,
-        year: dayjs().year(),
-    })
     const [orderedList, setOrderedList] = useState([])
     const [languages, setLanguages] = useState([])
     const [addNewLanguage, setAddNewLanguage] = useState()
@@ -159,8 +153,8 @@ export function Home() {
         response = response.data
 
         // book
-        setBooks(response.books.books.length)
-        setBookList(response.books.books)
+        setBooks(response.books.totalBooks)
+        setBookList(response.books?.books)
         setBooksTotalTime(response.books.totalTimeBooks)
         setBooksWords(response.books.totalBooksWords)
         setBooksHistory(response.books.booksLastHistory)
@@ -180,7 +174,7 @@ export function Home() {
         setVocabularyAverage(response.vocabulary.average)
         setVocabulary(response.vocabulary.vocabulary.length)
 
-        const ordered = [...response.anki.anki, ...response.books.booksHistory, ...response.medias.videos, ...response.talk.output, ...response.vocabulary.vocabulary].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        const ordered = [...response.anki.anki, ...response.books?.booksHistory, ...response.medias.videos, ...response.talk.output, ...response.vocabulary.vocabulary].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
         setOrderedList(ordered)
         setListJourney(ordered);
@@ -205,7 +199,7 @@ export function Home() {
             } else {
                 if (splitb !== splited) {
                     daysOfImersion++
-                    daysStreak = 1;
+                    daysStreak = 0;
                 }
             }
 
@@ -217,7 +211,7 @@ export function Home() {
         setLongestStreak(bigStreak)
         setDaysOfImmersion(daysOfImersion);
 
-        const parsedDurationMonth = response.month_report.map((item) => {
+        const parsedDurationMonth = response.month_report?.map((item) => {
             const [hours, minutes, seconds] = item.duration.split(':').map(Number);
             const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
             const monthItem = new Date(item.month.split('T')[0])
@@ -234,7 +228,7 @@ export function Home() {
         setChartMonthHour(parsedDurationMonth)
 
         let cumulativeHours = 0;
-        const hourCumulative = response.month_report.map((item) => {
+        const hourCumulative = response.month_report?.map((item) => {
             const [hours, minutes, seconds] = item.duration.split(':').map(Number);
             const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
             const monthItem = new Date(item.month.split('T')[0])
@@ -258,7 +252,7 @@ export function Home() {
         setHeatMap(response.daily_report)
 
         const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-        const todayGoal = response.daily_report.filter((entry) => entry.date === today);
+        const todayGoal = response.daily_report?.filter((entry) => entry.date === today);
         setDailyGoal(response.user.configs.dailyGoal);
         if (todayGoal && todayGoal.length > 0) {
             setDailyGoalDid(todayGoal[0].count || 0);
@@ -324,21 +318,7 @@ export function Home() {
             dailyDetails[day][element.source].totalMinutes += totalMinutes;
         });
 
-
-        const dailyDetailsFormated = Object.keys(dailyDetails).map(key => ({
-            date: key,
-            minutes: dailyDetails[key],
-        }));
-
-        const dailyMinutesSeparated = dailyDetailsFormated.map(item => {
-            const date = dayjs(item.date).format('MM/DD/YYYY');
-            const minutes = item.minutes;
-            const activityMinutes = activities.map(activity => minutes[activity] ? minutes[activity].totalMinutes : 0);
-            return { date, ...Object.fromEntries(activities.map((activity, index) => [activity, activityMinutes[index]])) };
-        });
-
         const languages = []
-        setDailyRegister(dailyMinutesSeparated)
         ordered.forEach((item) => {
             if (item.target_language && !languages.includes(item.target_language)) {
                 languages.push(item.target_language);
@@ -355,7 +335,7 @@ export function Home() {
 
         setLanguages(languages)
 
-        const dailyGoalTime = response.daily_report.filter((item) => {
+        const dailyGoalTime = response.daily_report?.filter((item) => {
             const itemDate = dayjs(item.date).add(+1, "day").format('DD/MM/YYYY')
             const today = dayjs().format('DD/MM/YYYY')
 
@@ -377,7 +357,7 @@ export function Home() {
 
         cal.paint({
             data: {
-                source: response.daily_report,
+                source: heatMap,
                 type: 'json',
                 x: (datum) => new Date(datum.date),
                 y: (datum) => datum.count
@@ -390,7 +370,7 @@ export function Home() {
                 },
             },
             date: {
-                start: dayjs().format("YYYY")
+                start: dayjs(heatMapStartDate)
             },
             domain: {
                 type: "month",
