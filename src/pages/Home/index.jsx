@@ -357,7 +357,7 @@ export function Home() {
 
         cal.paint({
             data: {
-                source: heatMap,
+                source: response.daily_report,
                 type: 'json',
                 x: (datum) => new Date(datum.date),
                 y: (datum) => datum.count
@@ -370,7 +370,7 @@ export function Home() {
                 },
             },
             date: {
-                start: dayjs(heatMapStartDate)
+                start: dayjs().format("YYYY")
             },
             domain: {
                 type: "month",
