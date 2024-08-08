@@ -10,7 +10,7 @@ import { Flash } from '../../components/Flash';
 import { useAuth } from '../../hooks/auth';
 
 export function Settings() {
-    const { refresh } = useAuth()
+    //const { refresh } = useAuth()
 
     const [succeessMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -32,9 +32,18 @@ export function Settings() {
 
     function handleSubmit() {
         setIsLoading(true)
-        api.patch('/v1/users', { wpm, averageWordsPage: awp, TL: language, dailyGoal: daily }).then((response) => {
+
+        const data = {
+            wpm: Number(wpm),
+            awp: Number(awp),
+            TL: language,
+            dailyGoal: Number(daily)
+        }
+
+        api.patch('/v1/user/settings', data).then((response) => {
+            console.log(response)
             setSuccessMessage('Settings Saved with Success');
-            refresh()
+            //refresh()
             clearMessage();
         }).catch((e) => {
             console.error(e)
@@ -104,7 +113,7 @@ export function Settings() {
                     value={awp}
                 />
 
-                <Button text={'Save'} onClick={() => handleSubmit()} disabled={isLoading}/>
+                <Button text={'Save'} onClick={() => handleSubmit()} disabled={isLoading} />
             </Section>
         </>
     );
