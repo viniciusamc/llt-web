@@ -8,6 +8,7 @@ import { useState } from "react";
 export function Words() {
 	const [listWords, setListWords] = useState([])
 
+	const [userLanguages, setUserLanguages] = useState([])
 	const [language, setLanguage] = useState("en")
 	const [order, setOrder] = useState("DESC")
 	const [limit, setLimit] = useState(50)
@@ -18,7 +19,9 @@ export function Words() {
 	useEffect(() => {
 		async function getWords() {
 			api.get("/v1/user/settings").then((response) => {
-				setLanguage(response.data.configs.TL)
+				setUserLanguages(response.data.languages)
+			}).catch(error => {
+				console.log(error)
 			})
 		}
 
@@ -39,23 +42,21 @@ export function Words() {
 			}
 		}).then(response => {
 			setListWords(response.data)
+		}).catch(error => {
+			console.log(error)
 		})
 	}
 
 	return (
 		<>
 			<Header />
-
 			<section className="p-6 bg-background border-2 border-white rounded-md w-11/12 mx-auto">
 				<div className="flex flex-wrap gap-4 justify-center items-end">
 					<div className="w-full sm:w-48">
 						<label htmlFor="language" className="block text-sm font-medium text-white">Language</label>
 						<select value={language} onChange={(e) => setLanguage(e.target.value)} id="language" className="mt-1 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-							<option value={language}>{iso6391.getName(language)}</option>
-							{iso6391.getAllCodes().map((item) => (
-								<option key={item} value={item}>
-									{iso6391.getName(item)}
-								</option>
+							{userLanguages.map((item, key) => (
+								<option key={key} value={item.language}>{iso6391.getName(item.language)}</option>
 							))}
 						</select>
 					</div>
@@ -100,7 +101,7 @@ export function Words() {
 							top: 20, right: 30, left: 20, bottom: 5,
 						}}
 					>
-						<CartesianGrid strokeDasharray="4 4" />
+						<CartesianGrid strokeDasharray="3 3" />
 						<XAxis dataKey="word" />
 						<YAxis />
 						<Tooltip />
