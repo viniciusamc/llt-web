@@ -1310,13 +1310,15 @@ export function Home() {
 
                 {listJourney.slice(itemOffset, itemOffset + itemsPerPage).map((item, index) => {
                     const clearDate = dayjs(item.created_at).format('DD/MM/YYYY');
-                    if (item.source == 'books') {
+                    if (item.source == 'Books') {
                         return null
                     }
-                    if (item.source == 'books_history') {
-                        const thisBook = listJourney.filter((a) => a.id == item.id_book)[0]
+                    if (item.source == 'BooksHistory') {
+                        const thisBook = bookList.filter((a) => a.id == item.id_book)[0]
                         item.source = thisBook.title
                     }
+
+
                     return (
                         <JourneyCard
                             key={index}
@@ -1334,8 +1336,8 @@ export function Home() {
                             diff={item.diff_last ? 'Difference ' + item.diff_last : null}
                             bookTitle={item.diff_last ? 'Difference ' + item.diff_last : null}
                             readType={item.readType ? 'Read Type ' + item.read_type : null}
-                            timeSession={item.time_diff ? 'Session Time ' + item.time_diff : null}
                             totalPages={item.total_pages && item.actual_page ? `${item.actual_page}/${item.total_pages}` : null}
+                            timeSession={item.time_diff ? 'Session Time ' + item.time_diff : null}
                             onClick={() => handleDelete(item.source, item.id)}
                         />
                     );

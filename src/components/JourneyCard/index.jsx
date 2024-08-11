@@ -28,7 +28,6 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
     } else if (icon == 'Podcast') {
         cardIcon = podcast
     } else {
-        title = "Book"
         cardIcon = book
     }
 
