@@ -5,11 +5,11 @@ import discord from '../../assets/discord.svg';
 import anki from '../../assets/anki.svg';
 import podcast from '../../assets/podcast.svg';
 import movie from '../../assets/movie.svg';
-import book from '../../assets/book.svg';
+import bookImg from '../../assets/book.svg';
 import iso6391 from 'iso-639-1';
 import { MdDelete } from "react-icons/md";
 
-export function JourneyCard({ icon, title, date, time, describe, words, tl, onClick, ...rest }) {
+export function JourneyCard({ icon, title, date, time, describe, words, tl, onClick, book, ...rest }) {
     let cardIcon;
 
     const languageName = iso6391.getName(tl);
@@ -28,7 +28,8 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
     } else if (icon == 'Podcast') {
         cardIcon = podcast
     } else {
-        cardIcon = book
+        cardIcon = bookImg
+        title = book
     }
 
     return (
