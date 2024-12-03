@@ -81,7 +81,7 @@ export function Home() {
         bookHowLong: '',
         vocabularyNew: '',
         vocabularyWhen: '',
-        targetLanguage: '',
+        targetLanguage: localStorage.getItem('@targetLanguage'),
     };
 
     const [value, onChange] = useState([new Date(2024, 1, 1), new Date()]);
@@ -148,250 +148,155 @@ export function Home() {
     const [languages, setLanguages] = useState([])
     const [addNewLanguage, setAddNewLanguage] = useState()
 
+    function formatSeconds(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+
+        // Using dayjs to format the time as HH:MM:SS
+        return dayjs().hour(hours).minute(minutes).second(remainingSeconds).format('HH:mm:ss');
+    }
+
     async function getInfoUser() {
-        let response = await api.get("/v1/user")
-        response = response.data
+        let response = await api.get("/user/me");
+        const data = response.data
+console.log(response)
 
-        // book
-        setBooks(response.books.totalBooks)
-        setBookList(response.books?.books)
-        setBooksTotalTime(response.books.totalTimeBooks)
-        setBooksWords(response.books.totalBooksWords)
-        setBooksHistory(response.books.booksLastHistory)
-        setBooksTotalPages(response.books.totalBooksPages)
+        setBooks(data.user.books.length);
+        setBookList(data.user.books);
 
-        // medias
-        setMediasWords(response.medias.totalWordCount)
-        setTotalTitmeYTBPD(response.medias.time)
+        // Calculate total book words and total time spent on books (using available fields)
+        let totalBooksWords = 0;
+        let totalTimeBooks = 0;
 
-        //talk
-        setTalk(response.talk.output.length)
-        setTalkTotalTime(response.talk.outputTotalTime)
-        setTalkAverage(response.talk.averageTime)
-        setTalkStreak(response.talk.outputStreak.currentStreak)
+        const latestBookHistories = {};
 
-        // vocabulary
-        setVocabularyAverage(response.vocabulary.average)
-        setVocabulary(response.vocabulary.vocabulary.length)
+        data.user.booksHistory.forEach(history => {
+            const bookId = history.id;  // Assuming bookId is a property in booksHistory
+            if (!latestBookHistories[bookId] || new Date(history.createdAt) > new Date(latestBookHistories[bookId].createdAt)) {
+                latestBookHistories[bookId] = history;
+            }
+        });
 
-        const ordered = [...response.anki.anki, ...response.books?.booksHistory, ...response.medias.videos, ...response.talk.output, ...response.vocabulary.vocabulary].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        setBooksHistory(data.user.booksHistory)
 
-        setOrderedList(ordered)
-        setListJourney(ordered);
-        setListJourneyWithoutFilter(ordered);
+        // Now calculate total words and time for only the most recent entry for each book
+        Object.values(latestBookHistories).forEach(history => {
+            totalBooksWords += history.totalWords || 0; // Adjust if totalWords is available
+            totalTimeBooks += history.time || 0; // Adjust if time is available
+        });
 
-        let daysStreak = 0
-        let bigStreak = 0
-        let daysOfImersion = 0
+        setBooksWords(totalBooksWords);
+        setBooksTotalTime(formatSeconds(totalTimeBooks));
+
+        // Media (YouTube) data processing
+        let youtubeWords = data.user.youtube.reduce((acc, video) => acc + video.totalWords, 0);
+        setMediasWords(youtubeWords);
+
+        let totalYouTubeTime = data.user.youtube.reduce((acc, video) => acc + video.duration, 0);
+        setTotalTitmeYTBPD(formatSeconds(totalYouTubeTime)); // Fixed typo here (from setTotalTitmeYTBPD to setTotalTimeYTB)
+
+        // Talk data processing
+        setTalk(data.user.output.length);
+
+        let talkTotalTime = data.user.output.reduce((acc, talk) => acc + talk.time, 0);
+        setTalkTotalTime(formatSeconds(talkTotalTime));
+
+        let talkAverageTime = data.user.output.length ? talkTotalTime / data.user.output.length : 0;
+        setTalkAverage(formatSeconds(talkAverageTime));
+
+        // Vocabulary (Anki) processing
+        setVocabularyAverage(data.user.userConfigs.averageWordsPerPage || 0);
+        setVocabulary(data.user.anki.length);
+
+        // Combined timeline (merge and order all events by date)
+        const ordered = [
+            ...data.user.anki,
+            ...data.user.booksHistory,
+            ...data.user.youtube,
+            ...data.user.output
+        ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const journey = [
+            ...ordered,
+            ...data.user.books
+        ]
+
+        setOrderedList(ordered);
+        setListJourney(journey);
+        setListJourneyWithoutFilter(journey);
+
+        let daysStreak = 0; // Current streak of consecutive days
+        let bigStreak = 0; // Longest streak
+        let daysOfImmersion = 0; // Total immersion days
+
         for (let i = 1; i < ordered.length; i++) {
-            const splited = ordered[i].created_at.split("T")[0];
-            const splitedP1 = new Date(splited);
+            const currentDate = new Date(ordered[i].createdAt);
+            const previousDate = new Date(ordered[i - 1].createdAt);
 
-            const splitb = ordered[i - 1].created_at.split("T")[0];
-            const splitbP1 = new Date(splitb);
-
-            const diffInTime = Math.abs(splitedP1 - splitbP1);
-            const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
+            const diffInDays = (previousDate.setHours(0, 0, 0, 0) - currentDate.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24);
 
             if (diffInDays === 1) {
-                daysStreak++;
-                daysOfImersion++
-            } else {
-                if (splitb !== splited) {
-                    daysOfImersion++
-                    daysStreak = 0;
-                }
+                daysStreak++; // Continue the streak
+            } else if (diffInDays > 1) {
+                daysStreak = 1; // Reset streak to 1 for the current day
             }
 
             if (daysStreak > bigStreak) {
                 bigStreak = daysStreak;
             }
-        }
-        setStreak(daysStreak)
-        setLongestStreak(bigStreak)
-        setDaysOfImmersion(daysOfImersion);
 
-        const parsedDurationMonth = response.month_report?.map((item) => {
-            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
-            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
-            const monthItem = new Date(item.month.split('T')[0])
-            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
-                month: 'long',
-                year: 'numeric',
-            });
-            return {
-                month: parsedMonth,
-                duration: durationNew
+            if (diffInDays > 0) {
+                daysOfImmersion++;
             }
-        })
-
-        setChartMonthHour(parsedDurationMonth)
-
-        let cumulativeHours = 0;
-        const hourCumulative = response.month_report?.map((item) => {
-            const [hours, minutes, seconds] = item.duration.split(':').map(Number);
-            const durationNew = Math.round(hours + (minutes / 60) + (seconds / 3600));
-            const monthItem = new Date(item.month.split('T')[0])
-            const parsedMonth = monthItem.toLocaleDateString(userLocale, {
-                month: 'long',
-                year: 'numeric',
-            });
-
-            cumulativeHours += durationNew
-
-            return {
-                month: parsedMonth,
-                duration: cumulativeHours
-            }
-        })
-
-        setChartMonthCumulative(hourCumulative)
-
-        setChartMonthHour(parsedDurationMonth)
-        setHeatMapStartdate(response.user.created_at)
-        setHeatMap(response.daily_report)
-
-        const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-        const todayGoal = response.daily_report?.filter((entry) => entry.date === today);
-        setDailyGoal(response.user.configs.dailyGoal);
-        if (todayGoal && todayGoal.length > 0) {
-            setDailyGoalDid(todayGoal[0].count || 0);
-        } else {
-            setDailyGoalDid(0);
         }
 
-        const dailyRegisterDate = ordered.filter((item) => {
-            const itemDateFormatted = dayjs(item.created_at).format('MM/DD/YYYY');
-            const itemDate = dayjs(itemDateFormatted)
-            const startOfCurrentMonth = dayjs().startOf('month');
-            const endOfCurrentMonth = dayjs().endOf('month');
-
-            return itemDate.isBetween(startOfCurrentMonth, endOfCurrentMonth, null, '[]');
-        });
-
-        const activities = ["Youtube", "books_history", "Books", "Anki", "Talk", "Vocabulary"];
-
-        const dailyDetails = {};
-
-        const firstDayOfMonth = dayjs().startOf('month');
-
-        const daysUntilToday = dayjs().diff(firstDayOfMonth, 'day') + 1;
-
-        for (let i = 0; i < daysUntilToday; i++) {
-            const currentDate = firstDayOfMonth.add(i, 'day');
-            const formattedDate = currentDate.format('MM/DD/YYYY');
-            dailyDetails[formattedDate] = {};
+        if (ordered.length > 0) {
+            daysOfImmersion++;
         }
 
-        dailyRegisterDate.forEach(element => {
-            const day = dayjs(element.created_at).format('MM/DD/YYYY');
+        setStreak(daysStreak);
+        setLongestStreak(bigStreak);
+        setDaysOfImmersion(data.dailyData.length);
 
-            if (!dailyDetails[day]) {
-                dailyDetails[day] = {};
-            }
+        const parsedDurationMonth = response.data.monthlyData?.map(item => {
+            const durationInHours = Math.round(item.totalseconds / 3600);  // Adjust to total seconds for accurate hours
+            const parsedMonth = new Date(item.month).toLocaleDateString(userLocale, { month: "long", year: "numeric" });
+            return { month: parsedMonth, duration: durationInHours };
+        }) || [];
 
-            if (!dailyDetails[day][element.source]) {
-                dailyDetails[day][element.source] = {
-                    activity: [],
-                    totalMinutes: 0,
-                };
-            }
+        setChartMonthHour(parsedDurationMonth);
 
-            dailyDetails[day][element.source].activity.push(element);
+        const languages = Array.from(new Set(ordered.map(item => item.targetLanguage).filter(Boolean)));
+        setLanguages(languages.length > 0 ? languages : [data.user.userConfigs.targetLanguage]);
 
-            if (element.source === 'BooksHistory' && element.time_diff) {
-                const timeSplited = element.time_diff.split(':')
-                const hours = parseInt(timeSplited[0]);
-                const minutes = parseInt(timeSplited[1]);
-                const seconds = parseInt(timeSplited[2]);
-                const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
-
-                dailyDetails[day][element.source].totalMinutes += totalMinutes;
-                return
-            }
-            const timeSplited = element.time?.split(':') || [0, 0, 0];
-            const hours = parseInt(timeSplited[0]);
-            const minutes = parseInt(timeSplited[1]);
-            const seconds = parseInt(timeSplited[2]);
-            const totalMinutes = Math.floor(hours * 60 + minutes + seconds / 60);
-
-            dailyDetails[day][element.source].totalMinutes += totalMinutes;
-        });
-
-        const languages = []
-        ordered.forEach((item) => {
-            if (item.target_language && !languages.includes(item.target_language)) {
-                languages.push(item.target_language);
-            }
-        });
-
-        if (languages.length == 0) {
-            languages.push(response.user.configs.TL)
-        }
-
-        if (!formData.targetLanguage) {
-            formData.targetLanguage = response.user.configs.TL
-        }
-
-        setLanguages(languages)
-
-        const dailyGoalTime = response.daily_report?.filter((item) => {
-            const itemDate = dayjs(item.date).add(+1, "day").format('DD/MM/YYYY')
-            const today = dayjs().format('DD/MM/YYYY')
-
-            return itemDate === today
-        })
-
-        setDailyGoalDid(dailyGoalTime[0]?.count || 0)
-
-        let totalMinutes = 0
-        response.daily_report.map((item) => {
-            totalMinutes += item.count
-
-        })
-        const hours = Math.floor(totalMinutes / 60);
-        const remainingMinutes = totalMinutes % 60;
-        const totalTimeF = `${hours}h ${remainingMinutes}m`;
-
-        setTotalTime(totalTimeF)
+        const heatmapData = data.dailyData?.map(item => ({
+            date: new Date(item.day),
+            count: Number(item.totalSeconds)
+        }));
 
         cal.paint({
-            data: {
-                source: response.daily_report,
-                type: 'json',
-                x: (datum) => new Date(datum.date),
-                y: (datum) => datum.count
-            },
+            data: { source: heatmapData, type: 'json', x: d => d.date, y: d => d.count },
             scale: {
-                color: {
-                    type: 'threshold',
-                    range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
-                    domain: [10, 20, 30, 60],
-                },
+                color: { type: 'threshold', range: ['#14432a', '#166b34', '#37a446', '#4dd05a'], domain: [10, 20, 30, 60] },
             },
-            date: {
-                start: dayjs().format("YYYY")
-            },
-            domain: {
-                type: "month",
-                label: { text: 'MMM', textAlign: 'start', position: 'top' },
-            },
+            date: { start: new Date(data.user.createdAt) },
+            domain: { type: 'month', label: { text: 'MMM', textAlign: 'start', position: 'top' } },
             subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
             itemSelector: "#heatmap",
             theme: "dark",
-        },
-            [
-                [
-                    Tooltips,
-                    {
-                        text: function(date, value, dayjsDate) {
-                            return (
-                                (value ? value + ' Minutes' : '0  Minutes 😔') + ' on ' + dayjsDate.format('LL')
-                            )
-                        }
-                    }
-                ]
-            ])
+        });
+
+        setDailyGoal(data.user.userConfigs.dailyGoal);
+        setDailyGoalDid(Math.round(response.data.dailyData[response.data.dailyData.length - 1]?.totalSeconds / 60) || 0);
+
+        // Total time formatting
+        let totalTime = 0
+        for (let i = 0; i < data.dailyData.length; i++) {
+            totalTime = + Number(data.dailyData[i].totalSeconds)
+        }
+
+        setTotalTime(formatSeconds(totalTime));
     }
 
     function handleSubmit(e) {
@@ -400,17 +305,22 @@ export function Home() {
         const modalValue = formData.modalValue;
         const targetLanguage = formData.targetLanguage
 
+        if (targetLanguage === 'newLanguage') {
+            setErrorMessage('Set the language of the content.')
+            return
+        }
+
         if (modalValue == 'Youtube' || modalValue == 'Podcast') {
             setIsLoading(true);
 
             const data = {
                 url: formData.youtubeUrl,
                 type: formData.modalValue,
-                watch_type: formData.youtubeHow,
-                target_language: targetLanguage,
+                watchType: formData.youtubeHow,
+                targetLanguage: targetLanguage,
             };
 
-            if (!data.url || !data.watch_type) {
+            if (!data.url || !data.watchType) {
                 setErrorMessage('All Fields are required.');
                 clearMessage();
                 setIsLoading(false);
@@ -428,7 +338,7 @@ export function Home() {
                 return;
             }
 
-            api.post('/v1/medias', data)
+            api.post('/youtube', data)
                 .then((response) => {
                     setSuccessMessage('Youtube Created with Success');
                     setIsLoading(false);
@@ -449,11 +359,11 @@ export function Home() {
             const data = {
                 reviewed: Number(formData.ankiReviewed),
                 newCards: Number(formData.ankiNew),
-                time: Number(formData.ankiLong),
-                target_language: targetLanguage,
+                time: Number(formData.ankiLong * 60),
+                targetLanguage: targetLanguage,
             };
 
-            api.post('/v1/anki', data)
+            api.post('/anki', data)
                 .then((r) => {
                     setSuccessMessage('Anki Created with success!');
                     setIsLoading(false);
@@ -468,52 +378,18 @@ export function Home() {
                 });
         }
 
-        if (modalValue == 'Movie') {
-            setIsLoading(false);
-
-            const data = {
-                subtitles: formData.movieFile,
-                title: formData.movieWhich,
-                watch_type: formData.movieHow,
-                type: formData.modalValue,
-                target_language: targetLanguage,
-            };
-
-            if (data.subtitles.type != 'application/x-subrip') {
-                setErrorMessage('Only .srt subtitles is allowed');
-                clearMessage();
-                return;
-            }
-
-            api.post('/v1/medias/movies', data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-                .then((response) => {
-                    setSuccessMessage('Movie Created with success');
-                    setIsLoading(false);
-                    clearMessage();
-                })
-                .catch((e) => {
-                    setErrorMessage('Failed, try again later');
-                    setIsLoading(false);
-                    clearMessage();
-                }).finally(() => {
-                    getInfoUser();
-                });
-        }
-
         if (modalValue == 'Talk') {
             setIsLoading(false);
 
             const data = {
-                type: formData.talkHow,
-                time: Number(formData.talkLong),
-                target_language: targetLanguage,
+                output: {
+                    type: formData.talkHow,
+                    duration: Number(formData.talkLong * 60),
+                    targetLanguage: targetLanguage,
+                }
             };
 
-            api.post('/v1/talk', data)
+            api.post('/output', data)
                 .then((response) => {
                     setSuccessMessage('Talk Created with success!');
                     setIsLoading(false);
@@ -533,24 +409,30 @@ export function Home() {
                 setIsLoading(false);
 
                 const data = {
-                    title: formData.bookNewTitle,
-                    pages: formData.bookNewPages,
-                    target_language: targetLanguage,
+                    book: {
+                        title: formData.bookNewTitle,
+                        targetLanguage: targetLanguage,
+                    },
+                    bookHistory: {
+                        actualPage: 0,
+                        totalPages: Number(formData.bookNewPages),
+                        readType: "First"
+                    }
                 };
 
-                if (!data.title || !data.pages) {
+                if (!data.book.title || !data.bookHistory.totalPages) {
                     setErrorMessage('All The fields are required');
                     clearMessage();
                     return;
                 }
 
-                if (data.pages >= 20000) {
+                if (data.bookHistory.pages >= 20000) {
                     setErrorMessage('Books Maximum Pages is 20000 pages');
                     clearMessage();
                     return;
                 }
 
-                api.post('/v1/books', data)
+                api.post('/book', data)
                     .then((response) => {
                         setSuccessMessage('Book created with success');
                         setIsLoading(false);
@@ -565,25 +447,34 @@ export function Home() {
                     });
             } else {
                 const data = {
-                    read_type: formData.bookHow,
-                    read_pages: Number(bookPages),
-                    time: Number(formData.bookHowLong),
-                    target_language: targetLanguage,
+                    bookHistory: {
+                        readType: formData.bookHow,
+                        actualPage: Number(bookPages),
+                        //time: Number(formData.bookHowLong),
+                        //target_language: targetLanguage,
+                    }
                 };
 
-                if (!data.read_pages || !data.read_type || !data.time) {
+                if (!data.bookHistory.readType || !data.bookHistory.actualPage) {
                     setErrorMessage('All The fields are required');
                     clearMessage();
                     return;
                 }
 
-                if (data.read_pages >= 20000) {
-                    setErrorMessage('Books Maximum Pages is 20000 pages');
+
+                const actualBook = booksHistory.filter((book) => {
+                    return book.book.id === selectedBook.id
+                }).sort()
+                const totalPagesPrior = actualBook[actualBook.length - 1].actualPage
+
+                if (data.bookHistory.actualPage <= totalPagesPrior) {
+                    setErrorMessage("The current page cannot be less than or equal to the previous page.");
                     clearMessage();
                     return;
                 }
 
-                api.patch(`/v1/books/${editBook}`, data)
+
+                api.post(`/book/${editBook.id}/history`, data)
                     .then((response) => {
                         setSuccessMessage('Book Updated with success');
                         setIsLoading(false);
@@ -624,9 +515,8 @@ export function Home() {
     }
 
     function handleDelete(source, id) {
-        console.log(source)
         if (source == 'Podcast' || source == 'Youtube' || source == "Medias") {
-            api.delete(`/v1/medias/${id}`)
+            api.delete(`/youtube/${id}`)
                 .then((response) => {
                     setInfoMessage(response.data);
                     clearMessage();
@@ -651,7 +541,7 @@ export function Home() {
                     getInfoUser();
                 });
         }
-        
+
         if (source == "BooksHistory") {
             api.delete(`/v1/books/history/${id}`)
                 .then((response) => {
@@ -765,9 +655,11 @@ export function Home() {
         })[0]
 
         if (selectedBook) {
-            const history = booksHistory.filter((book) => book.id_book === selectedBook.id);
-            setEditBook(history[0].id_book);
-            setBookPages(history[0].actual_page);
+            const actualBook = booksHistory.filter((book) => {
+                return book.book.id === selectedBook.id
+            }).sort()
+            setBookPages(actualBook[actualBook.length - 1].actualPage)
+            setEditBook(selectedBook);
         }
     }
 
@@ -1051,32 +943,8 @@ export function Home() {
                             )}
                             <div>
                                 <label>In which language? </label>
-                                <select name="targetLanguage" onChange={(event) => {
-                                    handleInputChange(event);
-                                    if (event.target.value === 'newLanguage') {
-                                        setAddNewLanguage(!addNewLanguage)
-                                    }
-                                }} value={formData.targetLanguage}>
-                                    {
-                                        languages && (
-                                            languages.map((item, index) => (
-                                                <option key={index} value={item}>
-                                                    {iso6391.getName(item)}
-                                                </option>
-                                            ))
-                                        )
-                                    }
-                                    <option value={'newLanguage'}>Add a new Language</option>
-                                    <option disabled>You can choose the default in Settings {'>'} Target Language</option>
-                                    {
-                                        addNewLanguage && (
-                                            iso6391.getAllCodes().map((item) => (
-                                                <option key={item} value={item}>
-                                                    {iso6391.getName(item)}
-                                                </option>
-                                            ))
-                                        )
-                                    }
+                                <select name="targetLanguage">
+                                    <option value={formData.targetLanguage}>{iso6391.getName(formData.targetLanguage)}</option>
                                 </select>
                             </div>
                             <Button onClick={handleSubmit} type="button" disabled={isLoading} text={'Submit'} />
@@ -1261,33 +1129,6 @@ export function Home() {
                         </LineChart>
                     </div>
                 </Chart>
-                <Chart
-                    style={{
-                        borderTopRightRadius: 8,
-                        borderBottomRightRadius: 8,
-                    }}
-                >
-                    <div>
-                        Total Hours
-                        <LineChart width={wsz} height={hsz} data={chartMonthCumulative}>
-                            <XAxis dataKey="month" scale={'point'} />
-                            <YAxis />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#252525' }}
-                                labelFormatter={(value) => {
-                                    const [month, year] = value.split('/');
-                                    const date = new Date(`${year}-${month}-01`);
-                                    return date.toLocaleDateString(userLocale, {
-                                        month: 'long',
-                                        year: 'numeric',
-                                    });
-                                }}
-                            />
-                            <Legend />
-                            <Line type="monotone" dataKey="duration" name="Total Hours" stroke="#8884d8" />
-                        </LineChart>
-                    </div>
-                </Chart>
             </Charts>
 
             <Journey>
@@ -1337,14 +1178,20 @@ export function Home() {
                 />
 
                 {listJourney.slice(itemOffset, itemOffset + itemsPerPage).map((item, index) => {
-                    const clearDate = dayjs(item.created_at).format('DD/MM/YYYY');
-                    if (item.source == 'Books') {
+                    const clearDate = dayjs(item.createdAt).format('DD/MM/YYYY');
+                    if (item.source == 'books') {
                         return null
                     }
+
                     let book;
-                    if (item.source == 'BooksHistory') {
-                        const thisBook = bookList.filter((a) => a.id == item.id_book)[0]
+                    if (item.source == 'booksHistory') {
+                        const thisBook = item.book
                         book = thisBook.title
+                        item.targetLanguage = item.book.targetLanguage
+                        if (item.actualPage === 0) {
+                            item.actualPage = "0"
+                            item.totalWords = "0"
+                        }
                     }
 
                     return (
@@ -1353,19 +1200,19 @@ export function Home() {
                             icon={item.source}
                             title={item.source}
                             describe={item.title}
-                            time={item.time}
-                            words={item.total_words}
+                            time={formatSeconds(item.duration)}
+                            words={item.totalWords}
                             date={clearDate}
                             withoutTitle={item.type}
-                            tl={item.target_language}
+                            tl={item.targetLanguage}
                             reviewed={item.reviewed ? 'Reviewed ' + item.reviewed : null}
-                            added={item.added_cards ? 'Added Cards ' + item.added_cards : null}
+                            added={item.newCards ? 'Added Cards ' + item.newCards : null}
                             total={item.vocabulary ? 'Vocabulary ' + item.vocabulary : null}
-                            diff={item.diff_last ? 'Difference ' + item.diff_last : null}
+                            diff={item.timeDiff ? 'Difference ' + formatSeconds(item.timeDiff) : null}
                             bookTitle={item.diff_last ? 'Difference ' + item.diff_last : null}
                             book={book}
-                            readType={item.readType ? 'Read Type ' + item.read_type : null}
-                            totalPages={item.total_pages && item.actual_page ? `${item.actual_page}/${item.total_pages}` : null}
+                            readType={item.readType ? 'Read Type: ' + item.readType : null}
+                            totalPages={item.totalPages && item.actualPage ? `${item.actualPage}/${item.totalPages}` : null}
                             timeSession={item.time_diff ? 'Session Time ' + item.time_diff : null}
                             onClick={() => handleDelete(item.source, item.id)}
                         />

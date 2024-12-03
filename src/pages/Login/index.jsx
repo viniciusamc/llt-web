@@ -6,9 +6,11 @@ import { Form, Bottom } from './styles';
 import { Flash } from '../../components/Flash';
 
 import { useAuth } from '../../hooks/auth';
+import { useEffect } from 'react';
 
 export function Login() {
     const { signIn } = useAuth();
+    const [email, setEmail] = useState('')
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -18,6 +20,14 @@ export function Login() {
             setSuccessMessage('');
         }, 2500);
     }
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const emailFromQuery = queryParams.get('email');
+        if (emailFromQuery) {
+            setEmail(emailFromQuery);
+        }
+    }, [location.search]);
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -35,26 +45,18 @@ export function Login() {
 
         const response = await signIn({ email, password });
 
-        if (response.data.error) {
-            setErrorMessage(response.data.error)
-        }
+        console.log(response)
 
-        if (response.errorStatus === 400) {
-            setErrorMessage('Your account is not verified. Please check your email.');
-        }
-
-        if (response.errorStatus === 404) {
-            setErrorMessage('Email or password incorrect. Please try again.');
-        }
-
-        if (response.errorStatus === 500) {
-            setErrorMessage('Internal server error. Please try again.');
-        }
+        //if(!response.access_token){
+        //    setErrorMessage(response.message)
+        //}
 
         if (response.success) {
             setSuccessMessage('Sign in successful!');
             window.location.href = '/';
         }
+
+            window.location.href = '/';
     }
 
     return (
@@ -66,13 +68,13 @@ export function Login() {
                     <h1>{global.logoName}</h1>
                     <p>Welcome back! Please sign in to your account.</p>
                 </div>
-                <Input type={'email'} label={'Email'} placeholder={'example@example.com'} required name={'email'} />
+                <Input type={'email'} label={'Email'} placeholder={'example@example.com'} required name={'email'} value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Input type={'password'} label={'Password'} placeholder={'******'} required={true} name={'password'} />
                 <Button type="submit" text={'Login'} />
                 <Bottom>
                     <p>
                         {' '}
-                        Don't have an account? <a href="/signup" style={{color: '#C94B4B'}}> Sign Up</a>
+                        Don't have an account? <a href="/signup" style={{ color: '#C94B4B' }}> Sign Up</a>
                     </p>
                 </Bottom>
             </Form>

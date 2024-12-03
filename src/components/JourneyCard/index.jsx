@@ -16,12 +16,13 @@ export function JourneyCard({ icon, title, date, time, describe, words, tl, onCl
 
     if (icon === 'Vocabulary') {
         cardIcon = vocabulary;
-    } else if (icon == 'Talk') {
+    } else if (icon == 'output') {
         cardIcon = discord;
-    } else if (icon == 'Medias' || icon == 'Video') {
+        title = 'Talk'
+    } else if (icon == 'youtube' || icon == 'Video') {
         cardIcon = youtube;
         title = 'Youtube';
-    } else if (icon == 'Anki') {
+    } else if (icon == 'anki') {
         cardIcon = anki;
     } else if (icon == 'Movie') {
         cardIcon = movie

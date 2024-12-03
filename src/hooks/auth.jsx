@@ -9,21 +9,22 @@ export const AuthProvider = ({ children }) => {
 
     const signIn = async ({ email, password }) => {
         return api
-            .post('/v1/sessions', { email, password })
+            .post('/auth/login', { email, password })
             .then((response) => {
-                api.defaults.headers.Authorization = `Bearer ${response.data.token}`;
+                api.defaults.headers.Authorization = `Bearer ${response.data.access_token}`;
 
-                setUser(response.data.user);
+                setUser({ user: response.data.user, config: response.data.config });
 
-                localStorage.setItem('@username', response.data.user)
+                localStorage.setItem('@username', response.data.user.username)
+                localStorage.setItem('@targetLanguage', response.data.config.targetLanguage)
 
-                Cookies.set('token', response.data.token, {
+                Cookies.set('token', response.data.access_token, {
                     expires: 30,
                     secure: true,
                     sameSite: true,
                 });
 
-                return { success: false };
+                return response;
             })
             .catch((e) => {
                 return e.response
