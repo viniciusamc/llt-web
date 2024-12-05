@@ -1,4 +1,3 @@
-
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -9,14 +8,12 @@ export default {
     extend: {
       colors: {
         main: '#31263E',
-        background: '#30253D',
-        primary: '#877D92',
-        secondary: '#9D82BD',
-        terciary: '#AB9DBD',
-        complementary: '#CCA2FF'
+        background: '#221E22',
+        primary: '#C94B4B',
+        secondary: '#252525',
+        white: '#FFF',
       },
     },
   },
   plugins: [],
 }
-

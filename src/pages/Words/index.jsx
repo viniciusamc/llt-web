@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Header } from "../../components/Header"
 import { api } from "../../services/api"
-import { useNavigate } from "react-router"
 
 export function Words() {
   const [listWords, setListWords] = useState([])
@@ -13,21 +12,26 @@ export function Words() {
   const [min, setMin] = useState(0)
   const [max, setMax] = useState(10000)
   const [showPremiumAlert, setShowPremiumAlert] = useState(false)
-  const navigate = useNavigate()
 
   async function handleSubscription() {
     const response = await api.post('/subscription')
     window.location.href = response.data.url
   }
 
+  async function handleUser(){
+    const response = await api.get("/user")
+    console.log(response.data)
+  }
+
   useEffect(() => {
+    handleUser()
     async function getWords() {
       try {
-        const response = await api.get("/user")
-        setSubscription(response.data.userConfigs.subscriptionActive)
+        const response = await api.get("/user/me")
         if (!response.data.userConfigs.subscriptionActive) {
           setShowPremiumAlert(false)
         } else {
+          setShowPremiumAlert(true)
           handleFilter()
         }
       } catch (error) {

@@ -2,6 +2,10 @@ import { useAuth } from '../../hooks/auth'
 import { useNavigate } from 'react-router-dom'
 import { LogOut, Settings } from 'lucide-react'
 import { useState } from 'react'
+import { Subscript } from 'lucide-react'
+import { SubscriptIcon } from 'lucide-react'
+import { DiamondIcon } from 'lucide-react'
+import { Diamond } from 'lucide-react'
 
 export function Header() {
     const { signOut, user } = useAuth()
@@ -51,6 +55,13 @@ export function Header() {
                                 Hello, {localStorage.getItem("@username")}
                             </div>
                             <div className="border-t border-gray-200 my-1"></div>
+                            <button
+                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => navigate('/subscription')}
+                            >
+                                <Diamond className="mr-2 h-4 w-4" />
+                                Subscription
+                            </button>
                             <button
                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 onClick={() => navigate('/settings')}

@@ -85,24 +85,24 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.8 }}
         >
-          <h2 className="text-3xl font-bold mb-6 text-complementary">Join Thousands of Satisfied Learners</h2>
+          <h2 className="text-3xl font-bold mb-6 ">Join Thousands of Satisfied Learners</h2>
           <div className="flex flex-wrap justify-center items-center gap-8">
             <div className="flex items-center">
-              <Users className="w-12 h-12 text-secondary mr-4" />
+              <Users className="w-12 h-12 text-primary mr-4" />
               <div className="text-left">
-                <p className="text-4xl font-bold text-complementary">10,000+</p>
-                <p className="text-terciary">Active Users</p>
+                <p className="text-4xl font-bold text-white">10,000+</p>
+                <p className="text-white">Active Users</p>
               </div>
             </div>
             <div className="flex items-center">
-              <Globe className="w-12 h-12 text-secondary mr-4" />
+              <Globe className="w-12 h-12 text-primary mr-4" />
               <div className="text-left">
                 <p className="text-4xl font-bold text-complementary">20+</p>
                 <p className="text-terciary">Languages</p>
               </div>
             </div>
             <div className="flex items-center">
-              <Youtube className="w-12 h-12 text-secondary mr-4" />
+              <Youtube className="w-12 h-12 text-primary mr-4" />
               <div className="text-left">
                 <p className="text-4xl font-bold text-complementary">1M+</p>
                 <p className="text-terciary">Videos Processed</p>
@@ -118,10 +118,10 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-12 text-complementary">Why Choose LogLingua?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: <Youtube className="w-12 h-12 text-secondary mb-4" />, title: "YouTube Integration", description: "Learn from any YouTube content in your target language" },
-              { icon: <Book className="w-12 h-12 text-secondary mb-4" />, title: "Personalized Tracking", description: "Build a vocabulary list tailored to your viewing habits" },
-              { icon: <BarChart2 className="w-12 h-12 text-secondary mb-4" />, title: "Progress Visualization", description: "See your improvement over time with beautiful charts" },
-              { icon: <Globe className="w-12 h-12 text-secondary mb-4" />, title: "Multi-language Support", description: "Learn Spanish, French, Japanese, and many more" },
+              { icon: <Youtube className="w-12 h-12 text-primary mb-4" />, title: "YouTube Integration", description: "Learn from any YouTube content in your target language" },
+              { icon: <Book className="w-12 h-12 text-primary mb-4" />, title: "Personalized Tracking", description: "Build a vocabulary list tailored to your viewing habits" },
+              { icon: <BarChart2 className="w-12 h-12 text-primary mb-4" />, title: "Progress Visualization", description: "See your improvement over time with beautiful charts" },
+              { icon: <Globe className="w-12 h-12 text-primary mb-4" />, title: "Multi-language Support", description: "Learn Spanish, French, Japanese, and many more" },
             ].map((feature, index) => (
               <motion.div
                 key={index}
@@ -211,7 +211,7 @@ export default function LandingPage() {
                   "Priority customer support",
                 ].map((feature, index) => (
                   <li key={index} className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-secondary mr-2" />
+                    <CheckCircle className="w-5 h-5 text-primary mr-2" />
                     <span className="text-terciary">{feature}</span>
                   </li>
                 ))}
@@ -220,7 +220,7 @@ export default function LandingPage() {
                 href="signup"
                 className="block w-full bg-primary text-white text-center py-3 rounded-md hover:bg-opacity-80 transition duration-300 font-semibold"
               >
-                Start Your 30-Day Free Trial
+                Get your subcription
               </a>
               <p className="text-center text-terciary mt-4 text-sm">No credit card required</p>
             </div>
