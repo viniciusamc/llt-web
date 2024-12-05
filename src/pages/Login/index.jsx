@@ -45,18 +45,13 @@ export function Login() {
 
         const response = await signIn({ email, password });
 
-        console.log(response)
-
-        //if(!response.access_token){
-        //    setErrorMessage(response.message)
-        //}
-
-        if (response.success) {
+        if(response.status != 200){
+            setErrorMessage(response.data.message)
+            setClear()
+        } else {
             setSuccessMessage('Sign in successful!');
-            window.location.href = '/';
+            window.location.href = '/'
         }
-
-            window.location.href = '/';
     }
 
     return (
