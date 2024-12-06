@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
             .then((response) => {
                 api.defaults.headers.Authorization = `Bearer ${response.data.access_token}`;
 
-                setUser({ user: response.data.user, config: response.data.config });
+                setUser(response.data.access_token);
 
                 localStorage.setItem('@username', response.data.user.username)
                 localStorage.setItem('@targetLanguage', response.data.config.targetLanguage)

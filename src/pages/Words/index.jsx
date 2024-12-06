@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Header } from "../../components/Header"
 import { api } from "../../services/api"
+import { useAuth } from "../../hooks/auth"
+
 
 export function Words() {
   const [listWords, setListWords] = useState([])
@@ -18,16 +20,15 @@ export function Words() {
     window.location.href = response.data.url
   }
 
-  async function handleUser(){
+  async function handleUser() {
     const response = await api.get("/user")
-    console.log(response.data)
   }
 
   useEffect(() => {
     handleUser()
     async function getWords() {
       try {
-        const response = await api.get("/user/me")
+        const response = await api.get("/user") 
         if (!response.data.userConfigs.subscriptionActive) {
           setShowPremiumAlert(false)
         } else {

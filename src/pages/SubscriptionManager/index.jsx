@@ -11,7 +11,7 @@ export default function SubscriptionManagement() {
     async function checkSubscription() {
       try {
         const response = await api.get("/user")
-        setIsSubscribed(true)
+        setIsSubscribed(resonse.data.userConfigs.subscriptionActive)
       } catch (error) {
         console.error("Error checking subscription:", error)
       } finally {
