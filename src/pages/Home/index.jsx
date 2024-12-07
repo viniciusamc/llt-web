@@ -485,19 +485,19 @@ export function Home() {
                 target_language: targetLanguage,
             };
 
-            api.post('/v1/vocabulary', data)
-                .then((r) => {
-                    setSuccessMessage(r.data);
-                    clearMessage();
-                    setIsLoading(false);
-                })
-                .catch((e) => {
-                    setErrorMessage(e.response.data.error);
-                    setIsLoading(false);
-                    clearMessage();
-                }).finally(() => {
-                    getInfoUser();
-                });
+            //api.post('/vocabulary', data)
+            //    .then((r) => {
+            //        setSuccessMessage(r.data);
+            //        clearMessage();
+            //        setIsLoading(false);
+            //    })
+            //    .catch((e) => {
+            //        setErrorMessage(e.response.data.error);
+            //        setIsLoading(false);
+            //        clearMessage();
+            //    }).finally(() => {
+            //        getInfoUser();
+            //    });
         }
     }
 
@@ -743,7 +743,6 @@ export function Home() {
                                     <option value="Talk">Talk</option>
                                     <option value="Anki">Anki</option>
                                     <option value="Read">Read</option>
-                                    <option value="Vocabulary Test">Vocabulary Test</option>
                                 </select>
                             </div>
                             {(formData.modalValue === 'Youtube' || formData.modalValue === 'Podcast') && (
@@ -993,11 +992,6 @@ export function Home() {
                     </SwiperSlide>
                     <SwiperSlide>
                         <Card>
-                            <h5>Average Vocabulary Learned</h5> <p>{vocabularyAverage}</p>
-                        </Card>
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <Card>
                             <h5>Total Words Books</h5> <p>{booksWords}</p>
                         </Card>
                     </SwiperSlide>
@@ -1137,7 +1131,6 @@ export function Home() {
                                 <option value="Talk">Talk</option>
                                 <option value="Anki">Anki</option>
                                 <option value="Books">Read</option>
-                                <option value="Vocabulary">Vocabulary Test</option>
                             </select>
                         </section>
                         <section>

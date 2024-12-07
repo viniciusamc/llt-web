@@ -7,9 +7,9 @@ export function Words() {
   const [listWords, setListWords] = useState([])
   const [subscription, setSubscription] = useState(false)
   const [order, setOrder] = useState("DESC")
-  const [limit, setLimit] = useState(50)
+  const [limit, setLimit] = useState(500)
   const [page, setPage] = useState(1)
-  const [min, setMin] = useState(0)
+  const [min, setMin] = useState(10)
   const [max, setMax] = useState(10000)
   const [showPremiumAlert, setShowPremiumAlert] = useState(false)
 
@@ -40,12 +40,10 @@ export function Words() {
     }
   }
 
-  const handleUpgrade = () => {
-    // Implement upgrade logic here
-  }
-
   const handleSubscription = () => {
-    //Implement subscription logic here
+    const subscription = api.post('/subscription').then((response) => {
+      window.location.href = response.data.url
+    })
   }
 
   if (!subscription) {
@@ -55,7 +53,7 @@ export function Words() {
         <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
           <div className="bg-main shadow-md rounded-lg p-6 w-[350px] text-white">
             <h2 className="text-xl font-bold mb-2">Premium Feature</h2>
-            <p className="text-secondary mb-4">Upgrade to access word statistics</p>
+            <p className="text-white mb-4">Upgrade to access word statistics</p>
             <button 
               className="w-full bg-primary text-white px-4 py-2 rounded hover:bg-primary hover:opacity-80 transition-colors"
               onClick={handleSubscription}
@@ -68,7 +66,7 @@ export function Words() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-main p-6 rounded-lg shadow-xl max-w-md w-full text-white">
               <h2 className="text-xl font-bold mb-4">Premium Feature</h2>
-              <p className="mb-4 text-secondary">This feature is only available for premium subscribers. Upgrade your account to access detailed word statistics.</p>
+              <p className="mb-4 text-white">This feature is only available for premium subscribers. Upgrade your account to access detailed word statistics.</p>
               <button 
                 onClick={() => setShowPremiumAlert(false)}
                 className="bg-primary text-white px-4 py-2 rounded hover:bg-primary hover:opacity-80 transition-colors"

@@ -121,6 +121,10 @@ export function SignUp() {
                     </select>
                 </div>
                 <Button type="submit" text={'Sign Up'} />
+                <p>
+                    {' '}
+                    Already have an account? <a href="/login" style={{ color: '#C94B4B' }}> Login</a>
+                </p>
             </Form>
         </>
     );

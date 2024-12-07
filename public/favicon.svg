@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><style>
+    #light-icon {
+      display: inline;
+    }
+    #dark-icon {
+      display: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #light-icon {
+        display: none;
+      }
+      #dark-icon {
+        display: inline;
+      }
+    }
+  </style><g id="light-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><g><g transform="matrix(4.878048780487805,0,0,4.878048780487805,0,165.85365853658539)"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="205" height="137"><svg width="205" height="137" viewBox="0 0 205 137" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 0V34.5C14 83.3772 53.6228 123 102.5 123V123C151.377 123 191 83.3772 191 34.5V0" stroke="#C94B4B" stroke-width="28"></path>
+</svg></svg></g></g></svg></g><g id="dark-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><g clip-path="url(#SvgjsClipPath1039)"><rect width="1000" height="1000" fill="#221e22"></rect><g transform="matrix(3.4146341463414633,0,0,3.4146341463414633,150,266.0975609756098)"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="205" height="137"><svg width="205" height="137" viewBox="0 0 205 137" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 0V34.5C14 83.3772 53.6228 123 102.5 123V123C151.377 123 191 83.3772 191 34.5V0" stroke="#C94B4B" stroke-width="28"></path>
+</svg></svg></g></g><defs><clipPath id="SvgjsClipPath1039"><rect width="1000" height="1000" x="0" y="0" rx="500" ry="500"></rect></clipPath></defs></svg></g></svg>
