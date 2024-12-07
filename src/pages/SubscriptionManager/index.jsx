@@ -13,7 +13,6 @@ export default function SubscriptionManagement() {
         const response = await api.get("/user")
         setIsSubscribed(resonse.data.userConfigs.subscriptionActive)
       } catch (error) {
-        console.error("Error checking subscription:", error)
       } finally {
         setLoading(false)
       }
@@ -27,7 +26,6 @@ export default function SubscriptionManagement() {
       const response = await api.post('/subscription')
       window.location.href = response.data.url
     } catch (error) {
-      console.error("Error initiating subscription:", error)
     }
   }
 
@@ -36,7 +34,6 @@ export default function SubscriptionManagement() {
       await api.delete('/subscription')
       setIsSubscribed(false)
     } catch (error) {
-      console.error("Error cancelling subscription:", error)
     }
   }
 

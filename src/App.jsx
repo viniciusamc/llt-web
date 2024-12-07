@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight, PlayCircle, BarChart2, Book, Youtube, Globe, CheckCircle, ArrowRight, Users } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import { Rocket } from 'lucide-react'
+import { Star } from 'lucide-react'
+import { Zap } from 'lucide-react'
 
 export default function LandingPage() {
   const [email, setEmail] = useState('')
@@ -65,7 +68,7 @@ export default function LandingPage() {
             type="submit"
             className="bg-primary text-white px-6 py-3 rounded-md hover:bg-opacity-80 transition duration-300 flex items-center justify-center w-full sm:w-auto"
           >
-            Start Your Free Trial
+            Start Your Log
             <ArrowRight className="ml-2 h-5 w-5" />
           </button>
         </motion.form>
@@ -85,28 +88,22 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.8 }}
         >
-          <h2 className="text-3xl font-bold mb-6 ">Join Thousands of Satisfied Learners</h2>
-          <div className="flex flex-wrap justify-center items-center gap-8">
-            <div className="flex items-center">
-              <Users className="w-12 h-12 text-primary mr-4" />
-              <div className="text-left">
-                <p className="text-4xl font-bold text-white">10,000+</p>
-                <p className="text-white">Active Users</p>
-              </div>
+          <h2 className="text-2xl font-bold mb-6 text-white text-center">Be Among the First to Experience LogLingua</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+            <div className="flex flex-col items-center text-center">
+              <Rocket className="w-12 h-12 text-primary mb-2" />
+              <h3 className="text-xl font-semibold mb-2 text-white">Early Access</h3>
+              <p className="text-white">Get exclusive first access to our revolutionary language learning platform.</p>
             </div>
-            <div className="flex items-center">
-              <Globe className="w-12 h-12 text-primary mr-4" />
-              <div className="text-left">
-                <p className="text-4xl font-bold text-complementary">20+</p>
-                <p className="text-terciary">Languages</p>
-              </div>
+            <div className="flex flex-col items-center text-center">
+              <Star className="w-12 h-12 text-primary mb-2" />
+              <h3 className="text-xl font-semibold mb-2 text-white">Shape the Future</h3>
+              <p className="text-white">Provide valuable feedback and help us tailor LogLingua to your needs.</p>
             </div>
-            <div className="flex items-center">
-              <Youtube className="w-12 h-12 text-primary mr-4" />
-              <div className="text-left">
-                <p className="text-4xl font-bold text-complementary">1M+</p>
-                <p className="text-terciary">Videos Processed</p>
-              </div>
+            <div className="flex flex-col items-center text-center">
+              <Zap className="w-12 h-12 text-primary mb-2" />
+              <h3 className="text-xl font-semibold mb-2 text-white">Accelerate Learning</h3>
+              <p className="text-white">Experience a new way of language learning through personalized video content.</p>
             </div>
           </div>
         </motion.div>

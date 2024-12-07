@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
 
             setUser(response.data.user);
         } catch (error) {
-            console.error('Error refreshing token:', error);
         }
     };
 

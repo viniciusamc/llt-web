@@ -23,7 +23,6 @@ export function Token() {
                 }
             } catch (error) {
                 setErrorMessage('Was not possible to active your account, please try again');
-                console.error(error);
             }
         }
 

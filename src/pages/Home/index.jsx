@@ -160,7 +160,6 @@ export function Home() {
     async function getInfoUser() {
         let response = await api.get("/user/me");
         const data = response.data
-console.log(response)
 
         setBooks(data.user.books.length);
         setBookList(data.user.books);
@@ -462,18 +461,6 @@ console.log(response)
                 }
 
 
-                const actualBook = booksHistory.filter((book) => {
-                    return book.book.id === selectedBook.id
-                }).sort()
-                const totalPagesPrior = actualBook[actualBook.length - 1].actualPage
-
-                if (data.bookHistory.actualPage <= totalPagesPrior) {
-                    setErrorMessage("The current page cannot be less than or equal to the previous page.");
-                    clearMessage();
-                    return;
-                }
-
-
                 api.post(`/book/${editBook.id}/history`, data)
                     .then((response) => {
                         setSuccessMessage('Book Updated with success');
@@ -515,9 +502,11 @@ console.log(response)
     }
 
     function handleDelete(source, id) {
-        if (source == 'Podcast' || source == 'Youtube' || source == "Medias") {
+        if (source == 'podcast' || source == 'youtube' || source == "medias") {
             api.delete(`/youtube/${id}`)
                 .then((response) => {
+                    const removeFromList = listJourney.find((item) => item.id != id)
+                    setListJourney(...removeFromList)
                     setInfoMessage(response.data);
                     clearMessage();
                 })
@@ -525,12 +514,13 @@ console.log(response)
                     setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
-                    getInfoUser();
                 });
         }
-        if (source == "Books") {
-            api.delete(`/v1/books/${id}`)
+        if (source == "books") {
+            api.delete(`/book/${id}`)
                 .then((response) => {
+                    const removeFromList = listJourney.find((item) => item.id != id)
+                    setListJourney(...removeFromList)
                     setInfoMessage(response.data);
                     clearMessage();
                 })
@@ -538,27 +528,14 @@ console.log(response)
                     setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
-                    getInfoUser();
-                });
-        }
-
-        if (source == "BooksHistory") {
-            api.delete(`/v1/books/history/${id}`)
-                .then((response) => {
-                    setInfoMessage(response.data);
-                    clearMessage();
-                })
-                .catch((e) => {
-                    setErrorMessage(e.response.data.error);
-                    clearMessage();
-                }).finally(() => {
-                    getInfoUser();
                 });
         }
 
-        if (source == 'Anki') {
-            api.delete(`/v1/anki/${id}`)
+        if (source == "booksHistory") {
+            api.delete(`/book/history/${id}`)
                 .then((response) => {
+                    const removeFromList = listJourney.find((item) => item.id != id)
+                    setListJourney(...removeFromList)
                     setInfoMessage(response.data);
                     clearMessage();
                 })
@@ -566,18 +543,34 @@ console.log(response)
                     setErrorMessage(e.response.data.error);
                     clearMessage();
                 }).finally(() => {
-                    getInfoUser();
                 });
         }
 
-        if (source == 'Talk') {
-            api.delete(`/v1/talk/${id}`)
+        if (source == 'anki') {
+            api.delete(`/anki/${id}`)
                 .then((response) => {
+                    const removeFromList = listJourney.find((item) => item.id != id)
+                    setListJourney(...removeFromList)
                     setInfoMessage(response.data);
                     clearMessage();
                 })
                 .catch((e) => {
-                    setErrorMessage(e.response.data.error);
+                    setErrorMessage(e.response);
+                    clearMessage();
+                }).finally(() => {
+                });
+        }
+
+        if (source == 'output') {
+            api.delete(`/output/${id}`)
+                .then((response) => {
+                    const removeFromList = listJourney.find((item) => item.id != id)
+                    setListJourney(...removeFromList)
+                    setInfoMessage(response.data);
+                    clearMessage();
+                })
+                .catch((e) => {
+                    setErrorMessage(e.response.data);
                     clearMessage();
                 }).finally(() => {
                     getInfoUser();
@@ -585,7 +578,7 @@ console.log(response)
         }
 
         if (source == 'Vocabulary') {
-            api.delete(`/v1/vocabulary/${id}`)
+            api.delete(`/vocabulary/${id}`)
                 .then((response) => {
                     setInfoMessage(response.data);
                     clearMessage();
@@ -646,7 +639,6 @@ console.log(response)
         const userName = localStorage.getItem('@username');
 
         setUsername(userName);
-
     }, []);
 
     function updateBookPages(selected) {

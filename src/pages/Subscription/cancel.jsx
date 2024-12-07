@@ -20,7 +20,7 @@ export default function SubscriptionCancelled() {
         </p>
         <div className="space-y-4">
           <a
-            href="/pricing"
+            href="/subscription"
             className="bg-primary text-white px-8 py-3 rounded-md hover:bg-opacity-80 transition duration-300 inline-block"
           >
             Return to home
