@@ -12,6 +12,10 @@ COPY . .
 
 RUN npm run build
 
+ENV NODE_ENV="production" \
+    VITE_PORT="" \
+    VITE_API_URL=""
+
 EXPOSE 3000
 
 CMD [ "serve", "-s", "dist" ]
