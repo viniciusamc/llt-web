@@ -1,12 +1,17 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json .  # Ensure lock file is copied
-RUN npm install  # Handle conflicts
+COPY package.json .
 
-COPY . .  
+RUN npm install --legacy-peer-deps
 
-EXPOSE 3050
+RUN npm i -g serve
 
-CMD ["npm", "run", "dev"]
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD [ "serve", "-s", "dist" ]
