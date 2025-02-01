@@ -14,7 +14,7 @@ RUN npm run build
 
 ENV NODE_ENV="production" \
     VITE_PORT="" \
-    VITE_API_URL=""
+    VITE_API_URL="http://llt-nest.railway.internal/"
 
 EXPOSE 3000
 
