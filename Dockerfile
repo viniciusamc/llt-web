@@ -12,10 +12,6 @@ COPY . .
 
 RUN npm run build
 
-ENV NODE_ENV="production" \
-    VITE_PORT="" \
-    VITE_API_URL="http://llt-nest.railway.internal/"
-
 EXPOSE 3000
 
 CMD [ "serve", "-s", "dist" ]
